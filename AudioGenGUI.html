@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap');
+
+        :root {
+            --brand: #6366f1;
+            --brand-hover: #4f46e5;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --sidebar: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --text-tertiary: #94a3b8;
+            --border: #e2e8f0;
+            --radius: 16px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --color-text-secondary: var(--text-muted);
+            --color-text-tertiary: var(--text-tertiary);
+            --border-radius-md: 8px;
+            --dark-bg-main: #0f172a;
+            --dark-bg-card: #1e293b;
+            --dark-sidebar: #1e293b;
+            --dark-text-main: #f1f5f9;
+            --dark-text-muted: #94a3b8;
+            --dark-text-tertiary: #64748b;
+            --dark-border: #334155;
+        }
+
+        /* Dark mode overrides */
+        body.dark {
+            --bg-main: var(--dark-bg-main);
+            --bg-card: var(--dark-bg-card);
+            --sidebar: var(--dark-sidebar);
+            --text-main: var(--dark-text-main);
+            --text-muted: var(--dark-text-muted);
+            --text-tertiary: var(--dark-text-tertiary);
+            --border: var(--dark-border);
+        }
+
+        body.dark .card {
+            background: var(--dark-bg-card);
+            border-color: var(--dark-border);
+        }
+
+        body.dark .main {
+            background: var(--dark-bg-main);
+        }
+
+        body.dark .sidebar {
+            border-right-color: var(--dark-border);
+        }
+
+        body.dark .nav-item:hover {
+            background: var(--dark-border);
+        }
+
+        body.dark .nav-item.active {
+            background: var(--dark-border);
+        }
+
+        body.dark textarea,
+        body.dark input,
+        body.dark select {
+            background: var(--dark-bg-main);
+            color: var(--dark-text-main);
+            border-color: var(--dark-border);
+        }
+
+        body.dark .upload-zone {
+            background: var(--dark-bg-main);
+            border-color: var(--dark-border);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            height: 100vh;
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            width: 100%;
+            max-width: 1280px;
+            height: 100%;
+            background: var(--bg-card);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .sidebar {
+            background: var(--sidebar);
+            border-right: 1px solid var(--border);
+            padding: 32px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--brand), #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* Dark mode toggle */
+        .theme-toggle {
+            margin-top: 12px;
+            padding: 8px 12px;
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        /* Drag and drop highlight */
+        .upload-zone.dragover {
+            border-color: var(--brand) !important;
+            background: rgba(99, 102, 241, 0.1) !important;
+        }
+
+        /* Progress indicator */
+        .progress-container {
+            display: none;
+            padding: 12px 16px;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            border-radius: 8px;
+            margin: 12px 16px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--brand), #a855f7);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            padding: 20px 24px 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-item {
+            margin: 2px 16px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background: #f8fafc;
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            background: #f1f5f9;
+            color: var(--brand);
+            font-weight: 600;
+        }
+
+        .nav-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main {
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .panels {
+            padding: 32px 40px;
+            flex: 1;
+            padding-bottom: 120px;
+        }
+
+        .panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sec-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #0f172a;
+        }
+
+        .sec-sub {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow);
+        }
+
+        .card-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .two {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        .field label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        input[type=text],
+        input[type=number],
+        select,
+        textarea {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: #fff;
+            font-family: inherit;
+            color: #0f172a;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .tg {
+            display: inline-flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .tb {
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            background: transparent;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tb.active {
+            background: #fff;
+            color: var(--brand);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-p {
+            background: #0f172a;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-p:hover {
+            background: var(--brand);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-s {
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-s:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        .bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            flex: 1;
+        }
+
+        .sdot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .bp {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .bg {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .ba {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .sr {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .sr input[type=range] {
+            flex: 1;
+            accent-color: var(--brand);
+            height: 6px;
+            border-radius: 3px;
+        }
+
+        .sv {
+            font-size: 13px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            min-width: 50px;
+            text-align: right;
+            color: var(--brand);
+        }
+
+        .meter {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .mf {
+            height: 100%;
+            background: var(--brand);
+            border-radius: 4px;
+            transition: width 0.3s ease, background-color 0.3s;
+        }
+
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+            background: #f8fafc;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--brand);
+            background: #f1f5f9;
+        }
+
+        .ref-preview {
+            display: none;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 16px;
+        }
+
+        .play-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #0f172a;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .play-btn:hover {
+            background: var(--brand);
+        }
+
+        .chip-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .chip {
+            background: #f1f5f9;
+            border: 1px solid transparent;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #475569;
+        }
+
+        .chip:hover {
+            background: #e2e8f0;
+        }
+
+        .chip.active {
+            background: #0f172a;
+            color: #fff;
+        }
+
+        .code-wrap {
+            background: #1e1e2e;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 16px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .code-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        #code-filename {
+            font-size: 13px;
+            color: #a6accd;
+            font-family: "Fira Code", monospace;
+            font-weight: 500;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .code-body {
+            padding: 20px;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .code-body pre {
+            margin: 0;
+            color: #cdd6f4;
+        }
+
+        .kw {
+            color: #cba6f7;
+        }
+
+        .fn {
+            color: #89b4fa;
+        }
+
+        .st {
+            color: #a6e3a1;
+        }
+
+        .cm {
+            color: #6c7086;
+            font-style: italic;
+        }
+
+        .nb {
+            color: #f38ba8;
+        }
+
+        .num {
+            color: #fab387;
+        }
+
+        .out-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .waveform {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 48px;
+            margin: 16px 0;
+            padding: 8px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #f1f5f9;
+            overflow: hidden;
+        }
+
+        .wbar {
+            width: 4px;
+            background: var(--brand);
+            border-radius: 2px;
+            transition: height 0.2s;
+        }
+
+        .poetry-bar {
+            margin-top: 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px dashed var(--border);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.06));
+        }
+
+        .poetry-bar .poetry-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.45;
+            margin-top: 6px;
+        }
+
+        .poetry-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .poetry-chips button {
+            font-size: 11px;
+            padding: 6px 10px;
+        }
+
+        body.dark .poetry-bar {
+            border-color: var(--dark-border);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>OmniVoice Studio</h2>
+                <p>6GB VRAM optimized · 4-bit NF4</p>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+                    <span id="theme-icon">🌙</span> <span id="theme-text">Dark mode</span>
+                </button>
+            </div>
+
+            <!-- Progress indicator for generation -->
+            <div class="progress-container" id="gen-progress">
+                <div style="font-size:11px;font-weight:600;color:var(--brand);">Generating...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="gen-progress-fill"></div>
+                </div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;" id="gen-progress-text">
+                    Initializing...</div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-label">Modes</div>
+                <div class="nav-item active" onclick="nav('clone',this)">
+                    <div class="nav-dot" style="background:#EEEDFE;color:#534AB7;font-size:10px">🎙</div>Voice cloning
+                </div>
+                <div class="nav-item" onclick="nav('design',this)">
+                    <div class="nav-dot" style="background:#E1F5EE;color:#0F6E56;font-size:10px">🎨</div>Voice design
+                </div>
+                <div class="nav-item" onclick="nav('auto',this)">
+                    <div class="nav-dot" style="background:#FAEEDA;color:#854F0B;font-size:10px">✨</div>Auto voice
+                </div>
+                <div class="nav-item" onclick="nav('karaoke',this)">
+                    <div class="nav-dot" style="background:#FFF0F6;color:#BE185D;font-size:10px">🎤</div>Karaoke VC
+                </div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-label">Settings</div>
+                <div class="nav-item" onclick="nav('hw',this)">
+                    <div class="nav-dot" style="background:#E6F1FB;color:#185FA5;font-size:10px">⚙</div>Model & hardware
+                </div>
+                <div class="nav-item" onclick="nav('adv',this)">
+                    <div class="nav-dot" style="background:#FCEBEB;color:#A32D2D;font-size:10px">🔬</div>Advanced params
+                </div>
+                <div class="nav-item" onclick="nav('out',this)">
+                    <div class="nav-dot" style="background:#EAF3DE;color:#3B6D11;font-size:10px">💾</div>Output & export
+                </div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-label">Tools</div>
+                <div class="nav-item" onclick="nav('codegen',this)">
+                    <div class="nav-dot" style="background:#1e1e2e;color:#cba6f7;font-size:10px">{"<>"}</div>Code
+                    generator
+                </div>
+                <div class="nav-item" onclick="nav('history',this)">
+                    <div class="nav-dot" style="background:#F1EFE8;color:#5F5E5A;font-size:10px">📂</div>History
+                </div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panels">
+
+                <!-- CLONE -->
+                <div class="panel active" id="panel-clone">
+                    <div class="sec-title">Voice cloning</div>
+                    <div class="sec-sub">Upload 3–10s of reference audio to clone that voice</div>
+                    <div class="card">
+                        <div class="field">
+                            <label>Reference audio <span class="badge bp">Required</span></label>
+                            <div class="upload-zone" onclick="document.getElementById('ref-audio-upload').click()">
+                                <div style="font-size:20px">🎵</div>
+                                <strong style="font-size:12px;display:block;margin-top:4px">Click to upload reference
+                                    audio</strong>
+                                <p>WAV · MP3 · FLAC &nbsp;·&nbsp; 3–10 seconds · 44.1kHz/24-bit ideal</p>
+                            </div>
+                            <input type="file" id="ref-audio-upload" accept="audio/*" style="display:none;"
+                                onchange="handleAudioUpload(event)">
+                            <div class="ref-preview" id="ref-prev">
+                                <button class="play-btn" onclick="togglePlay()" id="play-btn">
+                                    <svg width="10" height="10" viewBox="0 0 10 10">
+                                        <path d="M2 1.5L8.5 5L2 8.5V1.5Z" fill="white" />
+                                    </svg>
+                                </button>
+                                <div style="flex:1;min-width:0">
+                                    <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                                        id="ref-name">voice_sample.wav</div>
+                                    <div style="font-size:11px;color:var(--color-text-secondary)" id="ref-meta">4.2s ·
+                                        44.1kHz · Mono</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>Reference transcript <span class="badge bg">Optional — Whisper
+                                    auto-transcribes</span></label>
+                            <input type="text" id="ref-text"
+                                placeholder="What the reference audio says... (leave blank for auto)">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="field">
+                            <label>Text to synthesize <span class="badge bp">Required</span></label>
+                            <textarea id="synth-text"
+                                placeholder="Enter text to speak in the cloned voice...&#10;Use [laughter] [sigh] [breath] [pause] for non-verbal sounds."></textarea>
+                            <div
+                                style="text-align:right;font-size:10px;color:var(--color-text-tertiary);margin-top:3px">
+                                <span id="cc">0</span>/2000
+                            </div>
+                            <div class="poetry-bar">
+                                <label style="font-size:12px;font-weight:600;color:var(--text-main)">Poetry — Urdu
+                                    &amp; Hindi</label>
+                                <div class="poetry-chips">
+                                    <button type="button" class="btn-s" title="Ghalib — Urdu script"
+                                        onclick="applyPoetryPreset('ur_ghalib')">Urdu · Ghalib</button>
+                                    <button type="button" class="btn-s" title="Same verse in Latin letters"
+                                        onclick="applyPoetryPreset('ur_roman')">Urdu · Roman</button>
+                                    <button type="button" class="btn-s" title="Iqbal — short couplet"
+                                        onclick="applyPoetryPreset('ur_iqbal')">Urdu · Iqbal</button>
+                                    <button type="button" class="btn-s" title="Kabir — Hindi"
+                                        onclick="applyPoetryPreset('hi_kabir')">Hindi · Kabir</button>
+                                    <button type="button" class="btn-s" title="Kabir — Romanized Hindi"
+                                        onclick="applyPoetryPreset('hi_roman')">Hindi · Roman</button>
+                                </div>
+                                <p class="poetry-hint">Loads sample verse, sets target language, and switches tone to
+                                    <strong>Storytelling</strong> or <strong>Calm</strong> for a poetic reading. Use a
+                                    reference voice that matches the language for best results.</p>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>Target language</label>
+                            <select id="tgt-lang" onchange="updateCode()">
+                                <option value="auto">Auto-detect from text</option>
+                                <option value="en">English</option>
+                                <option value="ur">Urdu / اردو</option>
+                                <option value="ar">Arabic / العربية</option>
+                                <option value="zh">Chinese / 中文</option>
+                                <option value="fr">French / Français</option>
+                                <option value="de">German / Deutsch</option>
+                                <option value="es">Spanish / Español</option>
+                                <option value="ja">Japanese / 日本語</option>
+                                <option value="hi">Hindi / हिन्दी</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Tone / style</label>
+                            <div class="chip-group" id="style-chips">
+                                <div class="chip active" onclick="oneChip(this)">Neutral</div>
+                                <div class="chip" onclick="oneChip(this)">Formal</div>
+                                <div class="chip" onclick="oneChip(this)">Casual</div>
+                                <div class="chip" onclick="oneChip(this)">Enthusiastic</div>
+                                <div class="chip" onclick="oneChip(this)">Calm</div>
+                                <div class="chip" onclick="oneChip(this)">Storytelling</div>
+                                <div class="chip" onclick="oneChip(this)">News anchor</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DESIGN -->
+                <div class="panel" id="panel-design">
+                    <div class="sec-title">Voice design</div>
+                    <div class="sec-sub">Describe the voice — no reference audio needed</div>
+                    <div class="card">
+                        <div class="two">
+                            <div class="field"><label>Gender</label>
+                                <div class="tg"><button class="tb active" onclick="tog(this)">Male</button><button
+                                        class="tb" onclick="tog(this)">Female</button><button class="tb"
+                                        onclick="tog(this)">Neutral</button></div>
+                            </div>
+                            <div class="field"><label>Age</label>
+                                <div class="tg"><button class="tb" onclick="tog(this)">Child</button><button
+                                        class="tb active" onclick="tog(this)">Young adult</button><button class="tb"
+                                        onclick="tog(this)">Middle-aged</button><button class="tb"
+                                        onclick="tog(this)">Elderly</button></div>
+                            </div>
+                        </div>
+                        <div class="two">
+                            <div class="field"><label>Pitch</label>
+                                <div class="tg"><button class="tb" onclick="tog(this)">Low</button><button
+                                        class="tb active" onclick="tog(this)">Medium</button><button class="tb"
+                                        onclick="tog(this)">High</button></div>
+                            </div>
+                            <div class="field"><label>Style</label>
+                                <div class="tg"><button class="tb active" onclick="tog(this)">Normal</button><button
+                                        class="tb" onclick="tog(this)">Whisper</button><button class="tb"
+                                        onclick="tog(this)">Breathy</button><button class="tb"
+                                        onclick="tog(this)">Energetic</button></div>
+                            </div>
+                        </div>
+                        <div class="field"><label>Accent</label>
+                            <select id="accent-sel" onchange="updateCode()">
+                                <option>No accent (neutral)</option>
+                                <option>British English</option>
+                                <option>American English</option>
+                                <option>Australian English</option>
+                                <option>Indian English</option>
+                                <option>Scottish English</option>
+                                <option>Pakistani Urdu</option>
+                                <option>Egyptian Arabic</option>
+                            </select>
+                        </div>
+                        <div class="field"><label>Free-form instruct <span class="badge ba">Overrides above
+                                    selectors</span></label>
+                            <input type="text" id="instruct"
+                                placeholder='e.g. "female, young adult, high pitch, british accent"'
+                                oninput="updateCode()">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="field"><label>Text to synthesize</label><textarea id="design-text"
+                                placeholder="Enter text..."></textarea></div>
+                        <div class="field"><label>Target language</label>
+                            <select>
+                                <option>Auto-detect</option>
+                                <option>English</option>
+                                <option>Urdu</option>
+                                <option>Arabic</option>
+                                <option>Chinese</option>
+                                <option>French</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AUTO -->
+                <div class="panel" id="panel-auto">
+                    <div class="sec-title">Auto voice</div>
+                    <div class="sec-sub">Model picks a voice from its internal prior</div>
+                    <div class="card">
+                        <div class="field"><label>Text to synthesize</label><textarea
+                                placeholder="Enter any text — model selects a voice automatically..."></textarea></div>
+                        <div class="field"><label>Seed <span class="badge bg">Controls randomness</span></label>
+                            <div style="display:flex;gap:6px"><input type="number" id="auto-seed"
+                                    placeholder="e.g. 42 (blank = random)" style="flex:1" oninput="updateCode()"><button
+                                    class="btn-s"
+                                    onclick="document.getElementById('auto-seed').value=Math.floor(Math.random()*99999);updateCode()">🎲</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KARAOKE VC -->
+                <div class="panel" id="panel-karaoke">
+                    <div class="sec-title">Karaoke Voice Conversion</div>
+                    <div class="sec-sub">Upload your voice + any audio track → get the track re-sung in your voice</div>
+
+                    <!-- Pipeline badge -->
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;align-items:center">
+                        <div
+                            style="background:#F0FDF4;border:1px solid #BBF7D0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#15803D">
+                            1 · Vocal Isolation (HPSS)</div>
+                        <div style="color:#cbd5e1;font-size:12px">→</div>
+                        <div
+                            style="background:#EFF6FF;border:1px solid #BFDBFE;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#1D4ED8">
+                            2 · Whisper Transcription</div>
+                        <div style="color:#cbd5e1;font-size:12px">→</div>
+                        <div
+                            style="background:#FAF5FF;border:1px solid #E9D5FF;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#7C3AED">
+                            3 · Pitch Analysis (F0)</div>
+                        <div style="color:#cbd5e1;font-size:12px">→</div>
+                        <div
+                            style="background:#FFF7ED;border:1px solid #FED7AA;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#C2410C">
+                            4 · OmniVoice Clone</div>
+                        <div style="color:#cbd5e1;font-size:12px">→</div>
+                        <div
+                            style="background:#F0FDF4;border:1px solid #BBF7D0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#15803D">
+                            5 · Time Stretch + Mix</div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-label">Audio inputs</div>
+                        <div class="two">
+                            <div class="field">
+                                <label>Audio A — Voice reference <span class="badge bp">Required</span></label>
+                                <div class="upload-zone" id="kvc-ref-zone"
+                                    onclick="document.getElementById('kvc-ref-input').click()" style="padding:20px">
+                                    <div style="font-size:18px">🎙</div>
+                                    <strong style="font-size:11px;display:block;margin-top:4px">Voice identity</strong>
+                                    <p style="font-size:11px">3–10s clean voice sample</p>
+                                </div>
+                                <input type="file" id="kvc-ref-input" accept="audio/*" style="display:none"
+                                    onchange="kvcHandleRef(event)">
+                                <div class="ref-preview" id="kvc-ref-prev">
+                                    <button class="play-btn" onclick="kvcPlay('ref')"><svg width="10" height="10"
+                                            viewBox="0 0 10 10">
+                                            <path d="M2 1.5L8.5 5L2 8.5V1.5Z" fill="white" />
+                                        </svg></button>
+                                    <div style="flex:1;min-width:0">
+                                        <div style="font-size:12px;font-weight:600" id="kvc-ref-name">—</div>
+                                        <div style="font-size:11px;color:var(--text-muted)" id="kvc-ref-meta">—</div>
+                                    </div>
+                                    <button class="btn-s" style="font-size:11px;padding:4px 10px"
+                                        onclick="kvcClearRef()">✕</button>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label id="kvc-kar-label">Audio B — Source audio <span
+                                        class="badge bp">Required</span></label>
+                                <div class="upload-zone" id="kvc-kar-zone"
+                                    onclick="document.getElementById('kvc-kar-input').click()" style="padding:20px">
+                                    <div style="font-size:18px">🎵</div>
+                                    <strong style="font-size:11px;display:block;margin-top:4px">Source
+                                        performance</strong>
+                                    <p style="font-size:11px">Song, speech, or karaoke vocal</p>
+                                </div>
+                                <input type="file" id="kvc-kar-input" accept="audio/*" style="display:none"
+                                    onchange="kvcHandleKar(event)">
+                                <div class="ref-preview" id="kvc-kar-prev">
+                                    <button class="play-btn" onclick="kvcPlay('kar')"><svg width="10" height="10"
+                                            viewBox="0 0 10 10">
+                                            <path d="M2 1.5L8.5 5L2 8.5V1.5Z" fill="white" />
+                                        </svg></button>
+                                    <div style="flex:1;min-width:0">
+                                        <div style="font-size:12px;font-weight:600" id="kvc-kar-name">—</div>
+                                        <div style="font-size:11px;color:var(--text-muted)" id="kvc-kar-meta">—</div>
+                                    </div>
+                                    <button class="btn-s" style="font-size:11px;padding:4px 10px"
+                                        onclick="kvcClearKar()">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- AUDIO TYPE CARD -->
+                    <div class="card">
+                        <div class="card-label">What type of audio is Audio B?</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
+                            <div class="type-opt" id="kvc-type-full_song" onclick="kvcSetType('full_song')"
+                                style="cursor:pointer;padding:14px 12px;border-radius:12px;border:2px solid #6366f1;background:#f5f3ff">
+                                <div style="font-size:20px">&#127925;</div>
+                                <div style="font-size:12px;font-weight:700;color:#4f46e5;margin-top:4px">Full song</div>
+                                <div style="font-size:11px;color:#6b7280;margin-top:2px">Vocals + music mixed</div>
+                            </div>
+                            <div class="type-opt" id="kvc-type-vocals_only" onclick="kvcSetType('vocals_only')"
+                                style="cursor:pointer;padding:14px 12px;border-radius:12px;border:2px solid #e2e8f0;background:#f8fafc">
+                                <div style="font-size:20px">&#127897;</div>
+                                <div style="font-size:12px;font-weight:700;color:#374151;margin-top:4px">Vocals only
+                                </div>
+                                <div style="font-size:11px;color:#6b7280;margin-top:2px">Clean voice, no background
+                                </div>
+                            </div>
+                            <div class="type-opt" id="kvc-type-karaoke_track" onclick="kvcSetType('karaoke_track')"
+                                style="cursor:pointer;padding:14px 12px;border-radius:12px;border:2px solid #e2e8f0;background:#f8fafc">
+                                <div style="font-size:20px">&#127908;</div>
+                                <div style="font-size:12px;font-weight:700;color:#374151;margin-top:4px">Karaoke track
+                                </div>
+                                <div style="font-size:11px;color:#6b7280;margin-top:2px">Instrumental only, no vocals
+                                </div>
+                            </div>
+                            <div class="type-opt" id="kvc-type-speech" onclick="kvcSetType('speech')"
+                                style="cursor:pointer;padding:14px 12px;border-radius:12px;border:2px solid #e2e8f0;background:#f8fafc">
+                                <div style="font-size:20px">&#128172;</div>
+                                <div style="font-size:12px;font-weight:700;color:#374151;margin-top:4px">Speech /
+                                    podcast</div>
+                                <div style="font-size:11px;color:#6b7280;margin-top:2px">Spoken audio, dialogue</div>
+                            </div>
+                        </div>
+                        <!-- Manual transcript / lyrics — always visible, overrides Whisper when filled -->
+                        <div style="margin-top:16px">
+                            <label style="font-size:12px;font-weight:600;color:#374151">Manual transcript / lyrics <span
+                                    class="badge bg">Optional — overrides Whisper</span></label>
+                            <div style="font-size:11px;color:#6b7280;margin:4px 0 8px">Leave blank to let Whisper
+                                auto-transcribe. Fill in for <em>karaoke_track</em> (required) or to correct Whisper on
+                                any track type.</div>
+                            <textarea id="kvc-manual-lyrics"
+                                placeholder="Paste the full song lyrics or spoken text here…"
+                                style="width:100%;min-height:80px;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;background:#fff;color:#1e293b;line-height:1.5;box-sizing:border-box"></textarea>
+                            <div id="kvc-lyrics-required-hint"
+                                style="display:none;margin-top:4px;font-size:11px;color:#B45309;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:6px 10px">
+                                ⚠ <strong>Required for Karaoke track</strong> — no vocals to transcribe automatically.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-label">Pitch & timing</div>
+                        <div class="two">
+                            <div class="field">
+                                <label>Auto pitch align <span class="badge bg">Recommended</span></label>
+                                <div class="tg">
+                                    <button class="tb active" id="kvc-autopitch-on"
+                                        onclick="kvcToggleAutoPitch(true)">Auto</button>
+                                    <button class="tb" id="kvc-autopitch-off"
+                                        onclick="kvcToggleAutoPitch(false)">Manual</button>
+                                </div>
+                            </div>
+                            <div class="field" id="kvc-pitch-field" style="opacity:0.4;pointer-events:none">
+                                <label>Manual pitch shift (semitones)</label>
+                                <div class="sr">
+                                    <input type="range" min="-12" max="12" value="0" step="1" id="kvc-pitch"
+                                        oninput="this.nextElementSibling.textContent=(this.value>0?'+':'')+this.value">
+                                    <span class="sv">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>Transcription language</label>
+                            <select id="kvc-lang">
+                                <option value="auto">Auto-detect</option>
+                                <option value="en">English</option>
+                                <option value="ur">Urdu / اردو</option>
+                                <option value="ar">Arabic / العربية</option>
+                                <option value="zh">Chinese / 中文</option>
+                                <option value="fr">French</option>
+                                <option value="es">Spanish</option>
+                                <option value="de">German</option>
+                                <option value="ja">Japanese</option>
+                                <option value="hi">Hindi</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-label">Mix & output</div>
+                        <div class="field">
+                            <label>Mix output vocals with karaoke instrumental <span
+                                    class="badge bg">Optional</span></label>
+                            <div class="tg">
+                                <button class="tb" id="kvc-mix-on" onclick="kvcToggleMix(true)">Mix in</button>
+                                <button class="tb active" id="kvc-mix-off" onclick="kvcToggleMix(false)">Vocals
+                                    only</button>
+                            </div>
+                        </div>
+                        <div id="kvc-mix-controls" style="display:none">
+                            <div class="two">
+                                <div class="field">
+                                    <label>Vocal level</label>
+                                    <div class="sr"><input type="range" min="0" max="150" value="100" step="5"
+                                            id="kvc-vgain"
+                                            oninput="this.nextElementSibling.textContent=(this.value/100).toFixed(2)"><span
+                                            class="sv">1.00</span></div>
+                                </div>
+                                <div class="field">
+                                    <label>Instrumental level</label>
+                                    <div class="sr"><input type="range" min="0" max="150" value="80" step="5"
+                                            id="kvc-igain"
+                                            oninput="this.nextElementSibling.textContent=(this.value/100).toFixed(2)"><span
+                                            class="sv">0.80</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Result area -->
+                    <div id="kvc-result" style="display:none">
+                        <div class="card" style="border-color:#6366f1;background:linear-gradient(135deg,#f5f3ff,#fff)">
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                                <div>
+                                    <div style="font-size:15px;font-weight:700;color:#0f172a">Karaoke conversion done
+                                    </div>
+                                    <div style="font-size:12px;color:var(--text-muted);margin-top:2px"
+                                        id="kvc-result-meta">—</div>
+                                </div>
+                                <div style="display:flex;gap:8px">
+                                    <button class="btn-s" style="font-size:12px" id="kvc-play-btn"
+                                        onclick="kvcPlayResult()">Play</button>
+                                    <button class="btn-s" style="font-size:12px" id="kvc-dl-btn"
+                                        onclick="kvcDownload()">Download</button>
+                                </div>
+                            </div>
+                            <div class="waveform" id="kvc-waveform"></div>
+                            <div
+                                style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">
+                                <div
+                                    style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">
+                                    Whisper transcript</div>
+                                <div style="font-size:13px;color:#334155;font-style:italic" id="kvc-transcript">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HARDWARE -->
+                <div class="panel" id="panel-hw">
+                    <div class="sec-title">Model & hardware</div>
+                    <div class="sec-sub">Optimized defaults for 6GB VRAM GPU</div>
+                    <div class="card">
+                        <div class="field"><label>Compute device</label>
+                            <div class="tg"><button class="tb active"
+                                    onclick="tog(this);updateCode()">CUDA:0</button><button class="tb"
+                                    onclick="tog(this);updateCode()">CUDA:1</button><button class="tb"
+                                    onclick="tog(this);updateCode()">MPS</button><button class="tb"
+                                    onclick="tog(this);updateCode()">CPU</button></div>
+                        </div>
+                        <div class="field"><label>Quantization <span class="badge ba">4-bit recommended for
+                                    6GB</span></label>
+                            <div class="tg"><button class="tb"
+                                    onclick="tog(this);setQuant('fp32')">float32</button><button class="tb"
+                                    onclick="tog(this);setQuant('fp16')">float16</button><button class="tb"
+                                    onclick="tog(this);setQuant('8bit')">8-bit</button><button class="tb active"
+                                    onclick="tog(this);setQuant('4bit')">4-bit</button></div>
+                        </div>
+                        <div class="field"><label>4-bit quant type</label>
+                            <div class="tg" id="qtype-tg"><button class="tb active"
+                                    onclick="tog(this);updateCode()">nf4</button><button class="tb"
+                                    onclick="tog(this);updateCode()">fp4</button></div>
+                        </div>
+                        <div class="field"><label>Double quantization <span class="badge bg">Saves ~0.4 GB
+                                    extra</span></label>
+                            <div class="tg"><button class="tb active"
+                                    onclick="tog(this);updateCode()">Enabled</button><button class="tb"
+                                    onclick="tog(this);updateCode()">Disabled</button></div>
+                        </div>
+                        <div class="field"><label>CPU offloading (if OOM)</label>
+                            <div class="tg"><button class="tb" onclick="tog(this);updateCode()">Enabled</button><button
+                                    class="tb active" onclick="tog(this);updateCode()">Disabled</button></div>
+                        </div>
+                        <div class="field"><label>VRAM fraction limit</label>
+                            <div class="sr"><input type="range" min="50" max="100" value="90" step="1" id="vram-frac"
+                                    oninput="this.nextElementSibling.textContent=this.value+'%';updateCode()"><span
+                                    class="sv">90%</span></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">VRAM estimate</div>
+                        <div id="vram-label"
+                            style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                            <span>Estimated usage</span><span id="vram-est" style="font-weight:500">~4.2 GB / 6
+                                GB</span>
+                        </div>
+                        <div class="meter">
+                            <div class="mf" id="vram-bar" style="width:70%"></div>
+                        </div>
+                        <div id="vram-msg"
+                            style="font-size:11px;color:#3B6D11;background:#EAF3DE;padding:7px 9px;border-radius:var(--border-radius-md);margin-top:8px">
+                            Fits within 6 GB VRAM</div>
+                    </div>
+                </div>
+
+                <!-- ADVANCED -->
+                <div class="panel" id="panel-adv">
+                    <div class="sec-title">Advanced hyperparameters</div>
+                    <div class="sec-sub">Diffusion sampling, prosody, and speaker controls</div>
+                    <div class="card">
+                        <div class="card-label">Diffusion sampling</div>
+                        <div class="field"><label>Steps</label>
+                            <div class="sr"><input type="range" min="10" max="200" value="50" step="5" id="steps"
+                                    oninput="this.nextElementSibling.textContent=this.value;updateCode()"><span
+                                    class="sv">50</span></div>
+                            <div
+                                style="display:flex;justify-content:space-between;font-size:10px;color:var(--color-text-tertiary);margin-top:2px">
+                                <span>10 (fast)</span><span>200 (quality)</span>
+                            </div>
+                        </div>
+                        <div class="field"><label>CFG scale</label>
+                            <div class="sr"><input type="range" min="0.5" max="10" value="3.0" step="0.1" id="cfg"
+                                    oninput="this.nextElementSibling.textContent=parseFloat(this.value).toFixed(1);updateCode()"><span
+                                    class="sv">3.0</span></div>
+                        </div>
+                        <div class="field"><label>Temperature</label>
+                            <div class="sr"><input type="range" min="0.1" max="2.0" value="1.0" step="0.05" id="temp"
+                                    oninput="this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2);updateCode()"><span
+                                    class="sv">1.00</span></div>
+                        </div>
+                        <div class="field"><label>Sampler</label>
+                            <select id="sampler" onchange="updateCode()">
+                                <option value="dpmsolver++">DPM-Solver++ (recommended)</option>
+                                <option value="ddim">DDIM</option>
+                                <option value="euler">Euler</option>
+                                <option value="euler_a">Euler-a (ancestral)</option>
+                                <option value="pndm">PNDM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Prosody</div>
+                        <div class="field"><label>Speed</label>
+                            <div class="sr"><input type="range" min="0.5" max="2.0" value="1.0" step="0.05" id="speed"
+                                    oninput="this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2)+'x';updateCode()"><span
+                                    class="sv">1.00x</span></div>
+                        </div>
+                        <div class="field"><label>Pitch shift (semitones)</label>
+                            <div class="sr"><input type="range" min="-12" max="12" value="0" step="1" id="pitch"
+                                    oninput="this.nextElementSibling.textContent=(this.value>0?'+':'')+this.value;updateCode()"><span
+                                    class="sv">0</span></div>
+                        </div>
+                        <div class="field"><label>Fixed duration (sec) <span class="badge bg">Optional</span></label>
+                            <input type="number" id="duration" placeholder="Auto (leave blank)" min="0.5" step="0.5"
+                                oninput="updateCode()">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Speaker</div>
+                        <div class="field"><label>Speaker similarity weight</label>
+                            <div class="sr"><input type="range" min="0" max="1" value="0.8" step="0.05" id="sim"
+                                    oninput="this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2);updateCode()"><span
+                                    class="sv">0.80</span></div>
+                        </div>
+                        <div class="field"><label>Seed</label>
+                            <div style="display:flex;gap:6px"><input type="number" id="adv-seed"
+                                    placeholder="blank = random" style="flex:1" oninput="updateCode()"><button
+                                    class="btn-s"
+                                    onclick="document.getElementById('adv-seed').value=Math.floor(Math.random()*99999);updateCode()">🎲</button>
+                            </div>
+                        </div>
+                        <div class="field"><label>Non-verbal tags — click to copy</label>
+                            <div class="chip-group">
+                                <div class="chip" onclick="copyTag('[laughter]')">[laughter]</div>
+                                <div class="chip" onclick="copyTag('[sigh]')">[sigh]</div>
+                                <div class="chip" onclick="copyTag('[breath]')">[breath]</div>
+                                <div class="chip" onclick="copyTag('[pause]')">[pause]</div>
+                                <div class="chip" onclick="copyTag('[gasp]')">[gasp]</div>
+                                <div class="chip" onclick="copyTag('[cough]')">[cough]</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OUTPUT -->
+                <div class="panel" id="panel-out">
+                    <div class="sec-title">Output & export</div>
+                    <div class="sec-sub">Audio format and post-processing settings</div>
+                    <div class="card">
+                        <div class="two">
+                            <div class="field"><label>Format</label>
+                                <select id="fmt" onchange="updateCode()">
+                                    <option>WAV</option>
+                                    <option>FLAC</option>
+                                    <option>MP3 320kbps</option>
+                                    <option>OGG</option>
+                                </select>
+                            </div>
+                            <div class="field"><label>Sample rate</label>
+                                <select id="sr-sel" onchange="updateCode()">
+                                    <option value="24000">24000 Hz (native)</option>
+                                    <option value="44100">44100 Hz</option>
+                                    <option value="48000">48000 Hz</option>
+                                    <option value="22050">22050 Hz</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="two">
+                            <div class="field"><label>Channels</label>
+                                <div class="tg"><button class="tb active"
+                                        onclick="tog(this);updateCode()">Mono</button><button class="tb"
+                                        onclick="tog(this);updateCode()">Stereo</button></div>
+                            </div>
+                            <div class="field"><label>Bit depth</label>
+                                <select id="bd" onchange="updateCode()">
+                                    <option>16-bit</option>
+                                    <option selected>24-bit</option>
+                                    <option>32-bit float</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field"><label>Output directory</label>
+                            <input type="text" id="outdir" value="./omnivoice_outputs" oninput="updateCode()">
+                        </div>
+                        <div class="field"><label>Filename prefix</label>
+                            <input type="text" id="prefix" value="clone" oninput="updateCode()">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Post-processing</div>
+                        <div class="field"><label>Normalize to -3 dBFS</label>
+                            <div class="tg"><button class="tb active"
+                                    onclick="tog(this);updateCode()">Yes</button><button class="tb"
+                                    onclick="tog(this);updateCode()">No</button></div>
+                        </div>
+                        <div class="field"><label>Trim silence</label>
+                            <div class="tg"><button class="tb active"
+                                    onclick="tog(this);updateCode()">Yes</button><button class="tb"
+                                    onclick="tog(this);updateCode()">No</button></div>
+                        </div>
+                        <div class="field"><label>Clear VRAM between runs</label>
+                            <div class="tg"><button class="tb active"
+                                    onclick="tog(this);updateCode()">Yes</button><button class="tb"
+                                    onclick="tog(this);updateCode()">No</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CODE GEN -->
+                <div class="panel" id="panel-codegen">
+                    <div class="sec-title">Code generator</div>
+                    <div class="sec-sub">Python script built live from your current settings — copy and run directly
+                    </div>
+                    <div class="code-wrap">
+                        <div class="code-toolbar">
+                            <span id="code-filename">omnivoice_studio.py</span>
+                            <button class="copy-btn" onclick="copyCode()">Copy</button>
+                        </div>
+                        <div class="code-body">
+                            <pre id="code-pre"></pre>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px;display:flex;gap:8px">
+                        <button class="btn-s" style="font-size:11px" onclick="updateCode()">Refresh from
+                            settings</button>
+                        <button class="btn-s" style="font-size:11px" onclick="copyCode()">Copy to clipboard</button>
+                    </div>
+                </div>
+
+                <!-- HISTORY -->
+                <div class="panel" id="panel-history">
+                    <div class="sec-title">Generation history</div>
+                    <div class="sec-sub">Results from this session</div>
+                    <div id="hist-list">
+                        <div style="text-align:center;padding:40px;color:var(--color-text-tertiary);font-size:12px">No
+                            generations yet.</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- BOTTOM BAR -->
+            <div class="bottom-bar">
+                <div class="status-row">
+                    <div class="sdot" id="sdot"></div>
+                    <span id="stext">Ready · 4-bit NF4 · CUDA:0 · ~4.2 GB est.</span>
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <button class="btn-s"
+                        onclick="nav('codegen',document.querySelector('.nav-item:nth-child(8)'))">Code</button>
+                    <button class="btn-p" onclick="runGen()">Generate audio</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        var S = {
+            device: 'cuda:0', quant: '4bit', qtype: 'nf4', dquant: true, offload: false, vramFrac: 0.90,
+            steps: 50, cfg: 3.0, temp: 1.0, sampler: 'dpmsolver++', speed: 1.0, pitch: 0, duration: null, sim: 0.80, seed: null,
+            fmt: 'WAV', sr: 24000, bd: '24-bit', normalize: true, trimSilence: true, clearCache: true,
+            outdir: './omnivoice_outputs', prefix: 'clone', refText: '', instruct: '', lang: 'auto',
+            style: 'neutral'
+        };
+
+        function nav(id, el) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            var p = document.getElementById('panel-' + id);
+            if (p) p.classList.add('active');
+            if (el) el.classList.add('active');
+            if (id === 'codegen') updateCode();
+        }
+
+        function tog(btn) {
+            btn.closest('.tg').querySelectorAll('.tb').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function oneChip(c) {
+            c.closest('.chip-group').querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+            c.classList.add('active');
+            // Update style in S immediately if this is the style chip group
+            if (c.closest('.chip-group').id === 'style-chips') {
+                S.style = c.textContent.trim().toLowerCase().replace(/\s+/g, '_');
+            }
+        }
+
+        var POETRY_PRESETS = {
+            ur_ghalib: {
+                lang: 'ur',
+                style: 'storytelling',
+                text: 'ہزاروں خواہشیں ایسی کہ ہر خواہش پر دم نکلے\nبہت نکلے میرے ارمان لیکن پھر بھی کم نکلے'
+            },
+            ur_roman: {
+                lang: 'ur',
+                style: 'storytelling',
+                text: 'Hazaron khwahishein aisi ke har khwahish pe dam nikle\nBahut nikle mere armaan lekin phir bhi kam nikle'
+            },
+            ur_iqbal: {
+                lang: 'ur',
+                style: 'calm',
+                text: 'ستاروں سے آگے جہان اور بھی ہیں\nابھی عشق کے امتحان اور بھی ہیں'
+            },
+            hi_kabir: {
+                lang: 'hi',
+                style: 'storytelling',
+                text: 'दुख में सुमिरन सब करे, सुख में करे न कोय\nजो सुख में सुमिरन करे, तो कह न विपति कोय'
+            },
+            hi_roman: {
+                lang: 'hi',
+                style: 'storytelling',
+                text: 'Dukh mein sumiran sab kare, sukh mein kare na koye\nJo sukh mein sumiran kare, to kah na vipati koye'
+            }
+        };
+
+        function setActiveStyleChip(styleSlug) {
+            var labels = {
+                neutral: 'Neutral', formal: 'Formal', casual: 'Casual', enthusiastic: 'Enthusiastic',
+                calm: 'Calm', storytelling: 'Storytelling', news_anchor: 'News anchor'
+            };
+            var want = labels[styleSlug] || 'Storytelling';
+            var group = document.getElementById('style-chips');
+            if (!group) return;
+            group.querySelectorAll('.chip').forEach(function (c) {
+                c.classList.toggle('active', c.textContent.trim() === want);
+            });
+            S.style = styleSlug;
+        }
+
+        function applyPoetryPreset(key) {
+            var p = POETRY_PRESETS[key];
+            if (!p) return;
+            var ta = document.getElementById('synth-text');
+            if (ta) {
+                ta.value = p.text;
+                var cc = document.getElementById('cc');
+                if (cc) cc.textContent = ta.value.length;
+            }
+            var sel = document.getElementById('tgt-lang');
+            if (sel) sel.value = p.lang;
+            setActiveStyleChip(p.style);
+            var cloneNav = document.querySelector('.nav-section .nav-item[onclick*="clone"]');
+            if (cloneNav) nav('clone', cloneNav);
+            updateCode();
+        }
+
+        function copyTag(t) {
+            var ta = document.getElementById('synth-text');
+            if (!ta) return;
+            var p = ta.selectionStart;
+            ta.value = ta.value.slice(0, p) + t + ta.value.slice(p);
+            ta.selectionStart = ta.selectionEnd = p + t.length;
+            ta.focus();
+            document.getElementById('cc').textContent = ta.value.length;
+        }
+
+        function handleAudioUpload(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+            var name = file.name;
+            var size = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+            var ext = name.split('.').pop().toUpperCase();
+            document.getElementById('ref-name').textContent = name;
+            document.getElementById('ref-meta').textContent = size + ' · ' + ext;
+            document.getElementById('ref-prev').style.display = 'flex';
+            document.querySelector('.upload-zone').style.display = 'none';
+            updateCode();
+        }
+
+        var playing = false;
+        function togglePlay() {
+            playing = !playing;
+            var svg = playing ? '<rect x="2" y="2" width="3" height="8" fill="white"/><rect x="7" y="2" width="3" height="8" fill="white"/>' : '<path d="M2 1.5L8.5 5L2 8.5V1.5Z" fill="white"/>';
+            document.getElementById('play-btn').innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12">' + svg + '</svg>';
+        }
+
+        function setQuant(q) {
+            S.quant = q;
+            var map = { fp32: ['~16 GB', 267, false], fp16: ['~14 GB', 233, false], '8bit': ['~7.5 GB', 125, false], '4bit': ['~4.2 GB', 70, true] };
+            var m = map[q] || map['4bit'];
+            document.getElementById('vram-est').textContent = m[0] + ' / 6 GB';
+            document.getElementById('vram-bar').style.width = m[1] + '%';
+            document.getElementById('vram-bar').style.background = m[2] ? '#534AB7' : '#E24B4A';
+            document.getElementById('vram-msg').textContent = m[2] ? 'Fits within 6 GB VRAM' : 'Warning: may exceed 6 GB VRAM — use 4-bit';
+            document.getElementById('vram-msg').style.background = m[2] ? '#EAF3DE' : '#FCEBEB';
+            document.getElementById('vram-msg').style.color = m[2] ? '#3B6D11' : '#A32D2D';
+            document.getElementById('qtype-tg').style.opacity = q === '4bit' ? '1' : '0.4';
+            document.getElementById('stext').textContent = 'Ready · ' + q + ' · CUDA:0 · ' + m[0] + ' est.';
+            updateCode();
+        }
+
+        function readSettings() {
+            S.steps = parseInt(document.getElementById('steps').value) || 50;
+            S.cfg = parseFloat(document.getElementById('cfg').value) || 3.0;
+            S.temp = parseFloat(document.getElementById('temp').value) || 1.0;
+            S.sampler = document.getElementById('sampler').value;
+            S.speed = parseFloat(document.getElementById('speed').value) || 1.0;
+            S.pitch = parseInt(document.getElementById('pitch').value) || 0;
+            S.sim = parseFloat(document.getElementById('sim').value) || 0.8;
+            S.seed = document.getElementById('adv-seed').value || null;
+            S.outdir = document.getElementById('outdir').value || './omnivoice_outputs';
+            S.prefix = document.getElementById('prefix').value || 'clone';
+            S.lang = document.getElementById('tgt-lang').value;
+            S.vramFrac = parseInt(document.getElementById('vram-frac').value) / 100;
+            S.instruct = document.getElementById('instruct').value || '';
+            var d = document.getElementById('duration').value;
+            S.duration = d ? parseFloat(d) : null;
+            S.sr = parseInt(document.getElementById('sr-sel').value) || 24000;
+            // Read active style chip
+            var activeStyle = document.querySelector('#style-chips .chip.active');
+            S.style = activeStyle ? activeStyle.textContent.trim().toLowerCase().replace(/\s+/g, '_') : 'neutral';
+        }
+
+        function h(t) { return '<span class="kw">' + t + '</span>' }
+        function fn(t) { return '<span class="fn">' + t + '</span>' }
+        function st(t) { return '<span class="st">"' + t + '"</span>' }
+        function cm(t) { return '<span class="cm"># ' + t + '</span>' }
+        function nb(t) { return '<span class="nb">' + t + '</span>' }
+        function num(t) { return '<span class="num">' + t + '</span>' }
+
+        function updateCode() {
+            readSettings();
+            var qtype = document.querySelector('#qtype-tg .tb.active');
+            var qt = qtype ? qtype.textContent.trim() : 'nf4';
+            var dq = true;
+            var cpu = false;
+
+            var lines = [];
+            lines.push(cm('─────────────────────────────────────────────────────────'));
+            lines.push(cm('  OmniVoice Studio — Auto-generated script'));
+            lines.push(cm('  Quant: ' + S.quant + ' ' + qt + ' | Device: CUDA:0 | Steps: ' + S.steps));
+            lines.push(cm('  CFG: ' + S.cfg.toFixed(1) + ' | Temp: ' + S.temp.toFixed(2) + ' | Speed: ' + S.speed.toFixed(2) + 'x'));
+            lines.push(cm('  Sampler: ' + S.sampler + ' | SR: ' + S.sr + 'Hz'));
+            lines.push(cm('─────────────────────────────────────────────────────────'));
+            lines.push('');
+            lines.push(cm('Install: pip install omnivoice bitsandbytes accelerate soundfile scipy'));
+            lines.push('');
+            lines.push(h('import') + ' os, gc, sys, time, warnings');
+            lines.push(h('from') + ' pathlib ' + h('import') + ' Path');
+            lines.push(h('import') + ' torch');
+            lines.push(h('import') + ' numpy ' + h('as') + ' np');
+            lines.push(h('import') + ' soundfile ' + h('as') + ' sf');
+            lines.push(h('from') + ' omnivoice ' + h('import') + ' OmniVoice');
+            if (S.quant === '4bit' || S.quant === '8bit') {
+                lines.push(h('from') + ' transformers ' + h('import') + ' BitsAndBytesConfig');
+            }
+            lines.push('warnings.filterwarnings(' + st('ignore') + ')');
+            lines.push('');
+            lines.push(cm('─── Hardware / memory ───────────────────────────────────'));
+            lines.push('DEVICE    = ' + st(S.quant === 'fp32' || S.quant === 'fp16' ? 'cpu' : 'cuda:0'));
+            lines.push('QUANT     = ' + st(S.quant));
+            lines.push('VRAM_FRAC = ' + num(S.vramFrac.toFixed(2)));
+            lines.push('OUT_DIR   = Path(' + st(S.outdir) + ')');
+            lines.push('PREFIX    = ' + st(S.prefix));
+            lines.push('');
+            lines.push(cm('─── Diffusion hyperparameters ───────────────────────────'));
+            lines.push('NUM_STEPS = ' + num(S.steps));
+            lines.push('CFG_SCALE = ' + num(S.cfg.toFixed(1)));
+            lines.push('TEMP      = ' + num(S.temp.toFixed(2)));
+            lines.push('SAMPLER   = ' + st(S.sampler));
+            lines.push('SPEED     = ' + num(S.speed.toFixed(2)));
+            lines.push('PITCH     = ' + num(S.pitch));
+            lines.push('SIM_W     = ' + num(S.sim.toFixed(2)));
+            lines.push('SEED      = ' + (S.seed ? num(S.seed) : h('None')));
+            lines.push('DURATION  = ' + (S.duration ? num(S.duration.toFixed(1)) : h('None')));
+            lines.push('');
+            lines.push(cm('─── Output ──────────────────────────────────────────────'));
+            lines.push('SAMPLE_RATE = ' + num(S.sr));
+            lines.push('');
+            lines.push(cm('─── VRAM limit ──────────────────────────────────────────'));
+            lines.push(h('if') + ' torch.cuda.is_available():');
+            lines.push('    torch.cuda.set_per_process_memory_fraction(' + num(S.vramFrac.toFixed(2)) + ')');
+            lines.push('    torch.cuda.empty_cache()');
+            lines.push('    gc.collect()');
+            lines.push('');
+            lines.push(cm('─── Build quantization config ───────────────────────────'));
+
+            if (S.quant === '4bit') {
+                lines.push('quant_cfg = BitsAndBytesConfig(');
+                lines.push('    load_in_4bit              = ' + h('True') + ',');
+                lines.push('    bnb_4bit_quant_type       = ' + st(qt) + ',');
+                lines.push('    bnb_4bit_compute_dtype    = torch.float16,');
+                lines.push('    bnb_4bit_use_double_quant = ' + h('True') + ',  ' + cm('saves ~0.4 GB extra VRAM'));
+                lines.push(')');
+            } else if (S.quant === '8bit') {
+                lines.push('quant_cfg = BitsAndBytesConfig(load_in_8bit=' + h('True') + ')');
+            } else if (S.quant === 'fp16') {
+                lines.push('quant_cfg = ' + h('None'));
+            } else {
+                lines.push('quant_cfg = ' + h('None'));
+            }
+            lines.push('');
+            lines.push(cm('─── Load model ──────────────────────────────────────────'));
+            lines.push('print(' + st('Loading OmniVoice...') + ')');
+            lines.push('t0 = time.time()');
+            lines.push('');
+            lines.push('load_kwargs = {');
+            lines.push('    ' + st('device_map') + ': ' + st('auto') + ',');
+            if (S.quant === '4bit' || S.quant === '8bit') {
+                lines.push('    ' + st('quantization_config') + ': quant_cfg,');
+            } else if (S.quant === 'fp16') {
+                lines.push('    ' + st('dtype') + ': torch.float16,');
+            } else {
+                lines.push('    ' + st('dtype') + ': torch.float32,');
+            }
+            if (cpu) {
+                lines.push('    ' + st('offload_folder') + ': ' + st('./offload') + ',');
+                lines.push('    ' + st('offload_state_dict') + ': ' + h('True') + ',');
+            }
+            lines.push('}');
+            lines.push('');
+            lines.push('model = OmniVoice.from_pretrained(');
+            lines.push('    ' + st('k2-fsa/OmniVoice') + ',');
+            lines.push('    **load_kwargs');
+            lines.push(')');
+            lines.push('');
+            lines.push(h('if') + ' torch.cuda.is_available():');
+            lines.push('    used = torch.cuda.memory_allocated() / 1e9');
+            lines.push('    print(f' + st('Model loaded in {time.time()-t0:.1f}s | VRAM: {used:.2f} GB') + ')');
+            lines.push('');
+            lines.push(cm('─── Output directory ────────────────────────────────────'));
+            lines.push('OUT_DIR.mkdir(parents=' + h('True') + ', exist_ok=' + h('True') + ')');
+            lines.push('gen_count = 0');
+            lines.push('');
+            lines.push(cm('─── Normalize audio ─────────────────────────────────────'));
+            lines.push(h('def') + ' ' + fn('normalize') + fn('(audio, target_db=-3.0):'));
+            lines.push('    peak = np.max(np.abs(audio))');
+            lines.push('    ' + h('if') + ' peak < 1e-6: ' + h('return') + ' audio');
+            lines.push('    target_peak = 10 ** (target_db / 20.0)');
+            lines.push('    ' + h('return') + ' audio * (target_peak / peak)');
+            lines.push('');
+            lines.push(cm('─── Trim silence ────────────────────────────────────────'));
+            lines.push(h('def') + ' ' + fn('trim_silence') + fn('(audio, sr, threshold=0.01):'));
+            lines.push('    mask = np.abs(audio) > threshold');
+            lines.push('    idx  = np.where(mask)[0]');
+            lines.push('    ' + h('if') + ' len(idx) == 0: ' + h('return') + ' audio');
+            lines.push('    ' + h('return') + ' audio[idx[0]:idx[-1]+1]');
+            lines.push('');
+            lines.push(cm('─── Main generate function ──────────────────────────────'));
+            lines.push(h('def') + ' ' + fn('generate') + '(');
+            lines.push('    text: str,');
+            lines.push('    ref_audio: str  = ' + h('None') + ',');
+            lines.push('    ref_text: str   = ' + h('None') + ',');
+            lines.push('    instruct: str   = ' + h('None') + ',');
+            lines.push('    language_id: str= ' + h('None') + ',');
+            lines.push('    speed: float    = SPEED,');
+            lines.push('    duration: float = DURATION,');
+            lines.push('    seed: int       = SEED,');
+            lines.push(') -> Path:');
+            lines.push('    ' + h('global') + ' gen_count');
+            lines.push('');
+            lines.push('    ' + h('if') + ' seed ' + h('is not') + ' ' + h('None') + ':');
+            lines.push('        torch.manual_seed(seed)');
+            lines.push('        np.random.seed(seed)');
+            lines.push('');
+            lines.push('    gen_kwargs = {');
+            lines.push('        ' + st('text') + ': text,');
+            lines.push('        ' + st('num_inference_steps') + ': NUM_STEPS,');
+            lines.push('        ' + st('guidance_scale') + ': CFG_SCALE,');
+            lines.push('        ' + st('temperature') + ': TEMP,');
+            lines.push('        ' + st('speed') + ': speed,');
+            lines.push('    }');
+            lines.push('    ' + h('if') + ' duration ' + h('is not') + ' ' + h('None') + ':');
+            lines.push('        gen_kwargs[' + st('duration') + '] = duration');
+            lines.push('    ' + h('if') + ' ref_audio ' + h('is not') + ' ' + h('None') + ':');
+            lines.push('        gen_kwargs[' + st('ref_audio') + '] = ref_audio');
+            lines.push('    ' + h('if') + ' ref_text ' + h('is not') + ' ' + h('None') + ':');
+            lines.push('        gen_kwargs[' + st('ref_text') + '] = ref_text');
+            lines.push('    ' + h('if') + ' instruct ' + h('is not') + ' ' + h('None') + ':');
+            lines.push('        gen_kwargs[' + st('instruct') + '] = instruct');
+            lines.push('    ' + h('if') + ' language_id ' + h('is not') + ' ' + h('None') + ':');
+            lines.push('        gen_kwargs[' + st('language_id') + '] = language_id');
+            lines.push('');
+            lines.push('    t0 = time.time()');
+            lines.push('    audio = model.generate(**gen_kwargs)');
+            lines.push('    rt = time.time() - t0');
+            lines.push('    wav = audio[0]');
+            lines.push('');
+            lines.push('    ' + cm('post-processing'));
+            lines.push('    wav = trim_silence(wav, SAMPLE_RATE)');
+            lines.push('    wav = normalize(wav)');
+            lines.push('');
+            lines.push('    gen_count += 1');
+            lines.push('    out_path = OUT_DIR / f' + st('{PREFIX}_{gen_count:04d}.wav'));
+            lines.push('    sf.write(str(out_path), wav, SAMPLE_RATE, subtype=' + st('PCM_24') + ')');
+            lines.push('');
+            lines.push('    duration_s = len(wav) / SAMPLE_RATE');
+            lines.push('    rtf = rt / duration_s');
+            lines.push('    print(f' + st('Saved: {out_path} | {duration_s:.1f}s audio in {rt:.2f}s (RTF {rtf:.3f})') + ')');
+            lines.push('');
+            lines.push('    ' + h('if') + ' torch.cuda.is_available():');
+            lines.push('        torch.cuda.empty_cache()');
+            lines.push('        gc.collect()');
+            lines.push('');
+            lines.push('    ' + h('return') + ' out_path');
+            lines.push('');
+            lines.push(cm('─── Example usage ───────────────────────────────────────'));
+            lines.push(h('if') + ' __name__ == ' + st('__main__') + ':');
+            lines.push('');
+            lines.push('    ' + cm('1. Voice cloning — clone from reference audio'));
+            lines.push('    generate(');
+            lines.push('        text    = ' + st('Hello, this is my cloned voice.') + ',');
+            lines.push('        ref_audio=' + st('ref.wav') + ',');
+            lines.push('        ref_text = ' + h('None') + ',  ' + cm('auto-transcribes with Whisper'));
+            if (S.lang !== 'auto') lines.push('        language_id=' + st(S.lang) + ',');
+            lines.push('    )');
+            lines.push('');
+            lines.push('    ' + cm('2. Voice design — describe the voice'));
+            lines.push('    generate(');
+            lines.push('        text     = ' + st('Welcome to the future of voice technology.') + ',');
+            lines.push('        instruct = ' + st('male, deep, british accent') + ',');
+            lines.push('    )');
+            lines.push('');
+            lines.push('    ' + cm('3. Batch generation — multiple sentences'));
+            lines.push('    sentences = [');
+            lines.push('        ' + st('First sentence here.') + ',');
+            lines.push('        ' + st('Second sentence here.') + ',');
+            lines.push('        ' + st('Third sentence here.') + ',');
+            lines.push('    ]');
+            lines.push('    ' + h('for') + ' sent ' + h('in') + ' sentences:');
+            lines.push('        generate(text=sent, ref_audio=' + st('ref.wav') + ')');
+
+            document.getElementById('code-pre').innerHTML = lines.join('\n');
+        }
+
+        function copyCode() {
+            var text = document.getElementById('code-pre').innerText;
+            navigator.clipboard.writeText(text).then(function () {
+                var btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(function () { btn.textContent = 'Copy'; }, 1800);
+            });
+        }
+
+        var genCount = 0;
+        async function runGen() {
+            var btn = document.querySelector('.btn-p');
+            var dot = document.getElementById('sdot');
+            var st = document.getElementById('stext');
+            btn.textContent = 'Generating...';
+            btn.disabled = true;
+            dot.style.background = '#f59e0b';
+            dot.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.2)';
+            st.textContent = 'Processing request via backend...';
+
+            readSettings();
+            let textToSynth = document.getElementById('synth-text').value || document.getElementById('design-text').value || 'Hello from OmniVoice';
+
+            var fd = new FormData();
+            fd.append('text', textToSynth);
+            fd.append('settings', JSON.stringify(S));
+
+            var fileInput = document.getElementById('ref-audio-upload');
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                fd.append('ref_audio', fileInput.files[0]);
+            }
+
+            try {
+                let res = await fetch('/api/v2/generate', {
+                    method: 'POST',
+                    body: fd
+                });
+                let data = await res.json();
+                if (data.status === 'error') throw new Error(data.message);
+
+                btn.textContent = 'Generate audio';
+                btn.disabled = false;
+                dot.style.background = '#10b981';
+                dot.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)';
+                st.textContent = `Done · ${S.quant} · ${S.device.toUpperCase()} · Generated in ${data.generation_time}s`;
+                genCount++;
+                addHistory(data.text, data.audio_url, data.filepath);
+            } catch (e) {
+                btn.textContent = 'Generate audio';
+                btn.disabled = false;
+                dot.style.background = '#ef4444';
+                dot.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.2)';
+                st.textContent = 'Error: ' + (e.message || 'Failed to connect to backend');
+            }
+        }
+
+        var currentAudio = null;
+        var currentPlayBtn = null;
+
+        function playAudio(btn, url) {
+            if (!url) return alert('No audio URL available.');
+
+            if (currentAudio && currentAudio.src.endsWith(url)) {
+                if (currentAudio.paused) {
+                    currentAudio.play();
+                    btn.textContent = 'Pause';
+                } else {
+                    currentAudio.pause();
+                    btn.textContent = 'Play';
+                }
+                return;
+            }
+
+            if (currentAudio) {
+                currentAudio.pause();
+                if (currentPlayBtn) currentPlayBtn.textContent = 'Play';
+            }
+
+            currentAudio = new Audio(url);
+            currentPlayBtn = btn;
+            currentAudio.play().catch(function (e) { alert('Cannot play audio: ' + e); });
+            btn.textContent = 'Pause';
+
+            currentAudio.onended = function () {
+                btn.textContent = 'Play';
+            };
+        }
+
+        function downloadAudio(url) {
+            if (!url) return alert('No audio URL available.');
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = url.split('/').pop() || 'generated_audio.wav';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function addHistory(text, audioUrl, filepath) {
+            var list = document.getElementById('hist-list');
+            if (list.querySelector('div[style]')) list.innerHTML = '';
+            var card = document.createElement('div');
+            card.className = 'out-card';
+            var bars = Array.from({ length: 48 }, function () {
+                var h = 8 + Math.random() * 32;
+                return '<div class="wbar" style="height:' + h + 'px;margin-top:' + (48 - h) / 2 + 'px"></div>';
+            }).join('');
+            var preview = text ? text.slice(0, 60) + (text.length > 60 ? '...' : '') : 'Voice synthesis';
+
+            var safeUrl = audioUrl ? audioUrl.replace(/'/g, "\\'") : '';
+            var pathDisplay = filepath ? '<div style="font-size:11px;color:#4f46e5;margin-bottom:8px;font-family:\'Fira Code\',monospace;background:rgba(99, 102, 241, 0.1);padding:6px 10px;border-radius:6px;word-break:break-all;"><strong>Saved to: </strong>' + filepath + '</div>' : '';
+
+            card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+                + '<div><div style="font-size:14px;font-weight:600;color:var(--text-main)">Generation #' + genCount + '</div>'
+                + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + new Date().toLocaleTimeString() + ' · WAV · ' + (S.sr / 1000) + 'kHz · ' + S.quant + '</div></div>'
+                + '<div style="display:flex;gap:8px">'
+                + '<button class="btn-s" style="font-size:12px;padding:6px 12px" onclick="playAudio(this, \'' + safeUrl + '\')">Play</button>'
+                + '<button class="btn-s" style="font-size:12px;padding:6px 12px" onclick="downloadAudio(\'' + safeUrl + '\')">Save</button>'
+                + '</div></div>'
+                + pathDisplay
+                + '<div class="waveform">' + bars + '</div>'
+                + '<div style="font-size:13px;color:var(--text-muted);font-weight:500">"' + preview + '"</div>';
+            list.prepend(card);
+        }
+
+        // ── Load history from API ──────────────────────────────────────────────────
+        async function loadAPIHistory() {
+            try {
+                const res = await fetch('/api/v2/history?page=1&page_size=20&status_filter=done');
+                const data = await res.json();
+                if (!data.items || data.items.length === 0) return;
+                const list = document.getElementById('hist-list');
+                list.innerHTML = '';
+                data.items.forEach(function (item, idx) {
+                    if (!item.audio_url) return;
+                    genCount++;
+                    var card = document.createElement('div');
+                    card.className = 'out-card';
+                    var bars = Array.from({ length: 48 }, function () {
+                        var h = 8 + Math.random() * 32;
+                        return '<div class="wbar" style="height:' + h + 'px;margin-top:' + (48 - h) / 2 + 'px"></div>';
+                    }).join('');
+                    var preview = item.text_preview || 'Voice synthesis';
+                    var safeUrl = item.audio_url ? item.audio_url.replace(/'/g, "\\'") : '';
+                    var ts = item.created_at ? new Date(item.created_at).toLocaleString() : '';
+                    var genTime = item.generation_time ? item.generation_time + 's' : '—';
+                    card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+                        + '<div><div style="font-size:14px;font-weight:600;color:var(--text-main)">Job #' + item.job_id.slice(0, 8) + '</div>'
+                        + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + ts + ' · ' + item.mode + ' · ' + genTime + '</div></div>'
+                        + '<div style="display:flex;gap:8px">'
+                        + '<button class="btn-s" style="font-size:12px;padding:6px 12px" onclick="playAudio(this, \'' + safeUrl + '\')">Play</button>'
+                        + '<button class="btn-s" style="font-size:12px;padding:6px 12px" onclick="downloadAudio(\'' + safeUrl + '\')">Save</button>'
+                        + '</div></div>'
+                        + '<div class="waveform">' + bars + '</div>'
+                        + '<div style="font-size:13px;color:var(--text-muted);font-weight:500">"' + preview + '"</div>';
+                    list.appendChild(card);
+                });
+            } catch (e) { /* silently ignore if backend not running */ }
+        }
+
+        // ── Health poll ────────────────────────────────────────────────────────────
+        async function pollHealth() {
+            try {
+                const res = await fetch('/api/v2/health');
+                const data = await res.json();
+                const dot = document.getElementById('sdot');
+                const st = document.getElementById('stext');
+                const model = data.model || {};
+                const sys = data.system || {};
+                if (data.status === 'ok') {
+                    dot.style.background = '#10b981';
+                    dot.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.2)';
+                    var vram = model.vram_allocated_mb ? ' · ' + model.vram_allocated_mb + 'MB VRAM' : '';
+                    var cpu = sys.cpu_pct !== undefined ? ' · CPU ' + sys.cpu_pct.toFixed(0) + '%' : '';
+                    st.textContent = 'Model ready · v2.0.0' + vram + cpu;
+                } else {
+                    dot.style.background = '#f59e0b';
+                    st.textContent = 'Model not loaded — first generation will trigger load';
+                }
+            } catch (e) {
+                document.getElementById('sdot').style.background = '#94a3b8';
+                document.getElementById('stext').textContent = 'Backend offline — start app.py';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var ta = document.getElementById('synth-text');
+            if (ta) ta.addEventListener('input', function () { document.getElementById('cc').textContent = ta.value.length; });
+            updateCode();
+            pollHealth();
+            loadAPIHistory();
+            setInterval(pollHealth, 15000);
+        });
+
+        setTimeout(function () { updateCode(); }, 100);
+
+        // ════════ KARAOKE VOICE CONVERSION — JS ════════════════════════════════
+        var _kvcRefAudio = null, _kvcKarAudio = null, _kvcResultUrl = null, _kvcResultPlayer = null;
+        var _kvcAutoPitch = true, _kvcMix = false;
+        function kvcHandleRef(e) { var f = e.target.files[0]; if (!f) return; _kvcRefAudio = f; document.getElementById('kvc-ref-name').textContent = f.name; document.getElementById('kvc-ref-meta').textContent = (f.size / 1024 / 1024).toFixed(2) + ' MB'; document.getElementById('kvc-ref-prev').style.display = 'flex'; document.getElementById('kvc-ref-zone').style.display = 'none'; }
+        function kvcHandleKar(e) { var f = e.target.files[0]; if (!f) return; _kvcKarAudio = f; document.getElementById('kvc-kar-name').textContent = f.name; document.getElementById('kvc-kar-meta').textContent = (f.size / 1024 / 1024).toFixed(2) + ' MB'; document.getElementById('kvc-kar-prev').style.display = 'flex'; document.getElementById('kvc-kar-zone').style.display = 'none'; }
+        function kvcClearRef() { _kvcRefAudio = null; document.getElementById('kvc-ref-prev').style.display = 'none'; document.getElementById('kvc-ref-zone').style.display = ''; document.getElementById('kvc-ref-input').value = ''; }
+        function kvcClearKar() { _kvcKarAudio = null; document.getElementById('kvc-kar-prev').style.display = 'none'; document.getElementById('kvc-kar-zone').style.display = ''; document.getElementById('kvc-kar-input').value = ''; }
+        function kvcPlay(w) { var f = w === 'ref' ? _kvcRefAudio : _kvcKarAudio; if (!f) return; new Audio(URL.createObjectURL(f)).play(); }
+        function kvcToggleAutoPitch(on) { _kvcAutoPitch = on; document.getElementById('kvc-autopitch-on').classList.toggle('active', on); document.getElementById('kvc-autopitch-off').classList.toggle('active', !on); var pf = document.getElementById('kvc-pitch-field'); pf.style.opacity = on ? '0.4' : '1'; pf.style.pointerEvents = on ? 'none' : 'auto'; }
+        function kvcToggleMix(on) { _kvcMix = on; document.getElementById('kvc-mix-on').classList.toggle('active', on); document.getElementById('kvc-mix-off').classList.toggle('active', !on); document.getElementById('kvc-mix-controls').style.display = on ? 'block' : 'none'; }
+        function kvcPlayResult() { if (!_kvcResultUrl) return; if (_kvcResultPlayer) { _kvcResultPlayer.pause(); _kvcResultPlayer = null; document.getElementById('kvc-play-btn').textContent = 'Play'; return; } _kvcResultPlayer = new Audio(_kvcResultUrl); _kvcResultPlayer.play(); document.getElementById('kvc-play-btn').textContent = 'Pause'; _kvcResultPlayer.onended = function () { document.getElementById('kvc-play-btn').textContent = 'Play'; _kvcResultPlayer = null; }; }
+        function kvcDownload() { if (!_kvcResultUrl) return; var a = document.createElement('a'); a.href = _kvcResultUrl; a.download = 'kvc_output.wav'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+
+        // ── Audio type selector ───────────────────────────────────────────────────
+        var _kvcAudioType = 'full_song';
+        var _kvcTypeLabels = {
+            full_song: 'Full song (vocals + music)',
+            vocals_only: 'Vocals only',
+            karaoke_track: 'Karaoke track (instrumental)',
+            speech: 'Speech / podcast'
+        };
+        var _kvcTypeHints = {
+            full_song: 'Song, speech, or karaoke vocal',
+            vocals_only: 'Clean voice recording',
+            karaoke_track: 'Instrumental only — enter lyrics below',
+            speech: 'Spoken audio, dialogue, podcast'
+        };
+        function kvcSetType(t) {
+            _kvcAudioType = t;
+            // Update card styling
+            ['full_song', 'vocals_only', 'karaoke_track', 'speech'].forEach(function (k) {
+                var el = document.getElementById('kvc-type-' + k);
+                if (!el) return;
+                if (k === t) {
+                    el.style.borderColor = '#6366f1'; el.style.background = '#f5f3ff';
+                    el.querySelector('div:nth-child(2)').style.color = '#4f46e5';
+                } else {
+                    el.style.borderColor = '#e2e8f0'; el.style.background = '#f8fafc';
+                    el.querySelector('div:nth-child(2)').style.color = '#374151';
+                }
+            });
+            // Show/hide the 'required' hint for karaoke_track
+            var hint = document.getElementById('kvc-lyrics-required-hint');
+            if (hint) hint.style.display = (t === 'karaoke_track') ? 'block' : 'none';
+            // Update Audio B zone hint
+            var karZone = document.getElementById('kvc-kar-zone');
+            if (karZone) {
+                var p = karZone.querySelector('p');
+                if (p) p.textContent = _kvcTypeHints[t] || '';
+            }
+            // Auto-toggle mix for karaoke_track (it has an instrumental)
+            if (t === 'karaoke_track') kvcToggleMix(true);
+            // Disable auto pitch for karaoke_track (no vocals to compare)
+            if (t === 'karaoke_track') kvcToggleAutoPitch(false);
+        }
+        // Mark full_song as default active on load
+        document.addEventListener('DOMContentLoaded', function () {
+            kvcSetType('full_song');
+        });
+        async function runKVC() {
+            if (!_kvcRefAudio || !_kvcKarAudio) { alert('Upload both Audio A (voice reference) and Audio B (karaoke/performance).'); return; }
+            var btn = document.querySelector('.btn-p'), dot = document.getElementById('sdot'), stEl = document.getElementById('stext');
+            btn.textContent = 'Converting...'; btn.disabled = true; dot.style.background = '#f59e0b'; stEl.textContent = 'KVC [' + _kvcTypeLabels[_kvcAudioType] + ']: transcribing and synthesising...';
+            readSettings();
+            var fd = new FormData();
+            fd.append('ref_audio', _kvcRefAudio); fd.append('karaoke_audio', _kvcKarAudio);
+            fd.append('audio_type', _kvcAudioType);
+            var manualLyrics = document.getElementById('kvc-manual-lyrics').value.trim();
+            if (_kvcAudioType === 'karaoke_track' && manualLyrics) { fd.append('manual_lyrics', manualLyrics); }
+            if (_kvcAudioType === 'karaoke_track' && !manualLyrics) { alert('Please enter the lyrics/text for the karaoke track.'); btn.textContent = 'Generate audio'; btn.disabled = false; return; }
+            fd.append('match_pitch_auto', _kvcAutoPitch ? 'true' : 'false'); fd.append('mix_with_instrumental', _kvcMix ? 'true' : 'false');
+            fd.append('language', document.getElementById('kvc-lang').value);
+            if (!_kvcAutoPitch) fd.append('pitch_shift_override', document.getElementById('kvc-pitch').value);
+            if (_kvcMix) { fd.append('vocal_gain', (document.getElementById('kvc-vgain').value / 100).toFixed(2)); fd.append('inst_gain', (document.getElementById('kvc-igain').value / 100).toFixed(2)); }
+            fd.append('settings_json', JSON.stringify({ steps: S.steps, cfg: S.cfg, temp: S.temp, sampler: S.sampler, sim: S.sim, quant: S.quant }));
+            try {
+                var res = await fetch('/api/v2/karaoke', { method: 'POST', body: fd });
+                var data = await res.json();
+                if (data.status !== 'success') throw new Error(data.message || 'Unknown error');
+                _kvcResultUrl = data.audio_url;
+                document.getElementById('kvc-result').style.display = 'block';
+                document.getElementById('kvc-transcript').textContent = data.transcript || '(no transcript)';
+                var meta = data.generation_time + 's'; if (data.pitch_delta_semitones) meta += ' | pitch ' + (data.pitch_delta_semitones > 0 ? '+' : '') + parseFloat(data.pitch_delta_semitones).toFixed(1) + ' st';
+                document.getElementById('kvc-result-meta').textContent = meta;
+                var wf = document.getElementById('kvc-waveform'); wf.innerHTML = Array.from({ length: 48 }, function () { var h = 8 + Math.random() * 32; return '<div class="wbar" style="height:' + h + 'px;margin-top:' + (48 - h) / 2 + 'px"></div>'; }).join('');
+                btn.textContent = 'Generate audio'; btn.disabled = false; dot.style.background = '#10b981'; stEl.textContent = 'KVC done in ' + data.generation_time + 's';
+            } catch (e) { btn.textContent = 'Generate audio'; btn.disabled = false; dot.style.background = '#ef4444'; stEl.textContent = 'KVC error: ' + (e.message || 'Failed'); alert('Karaoke VC error: ' + (e.message || 'Unknown')); }
+        }
+        // Route Generate button to KVC when karaoke panel is active
+        document.addEventListener('click', function (e) { if (e.target.classList.contains('btn-p')) { var ap = document.querySelector('.panel.active'); if (ap && ap.id === 'panel-karaoke') { e.stopImmediatePropagation(); runKVC(); } } }, true);
+
+        // ════════ DARK MODE ═══════════════════════════════════════════════════
+        function toggleTheme() {
+            var isDark = document.body.classList.toggle('dark');
+            localStorage.setItem('omnivoice-theme', isDark ? 'dark' : 'light');
+            document.getElementById('theme-icon').textContent = isDark ? '☀' : '🌙';
+            document.getElementById('theme-text').textContent = isDark ? 'Light mode' : 'Dark mode';
+        }
+
+        // Restore saved theme preference
+        document.addEventListener('DOMContentLoaded', function () {
+            var savedTheme = localStorage.getItem('omnivoice-theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark');
+                document.getElementById('theme-icon').textContent = '☀';
+                document.getElementById('theme-text').textContent = 'Light mode';
+            }
+            setupDragAndDrop();
+        });
+
+        // ════════ DRAG AND DROP ════════════════════════════════════════════════
+        function setupDragAndDrop() {
+            // Upload zone IDs to handle
+            var zones = [
+                { zoneId: 'ref-audio-upload', zoneSelector: '.upload-zone', inputId: 'ref-audio-upload', onDrop: handleAudioUpload },
+                { zoneId: 'kvc-ref-input', zoneSelector: '#kvc-ref-zone', inputId: 'kvc-ref-input', onDrop: function (e) { kvcHandleRef({ target: { files: e.dataTransfer.files } }); } },
+                { zoneId: 'kvc-kar-input', zoneSelector: '#kvc-kar-zone', inputId: 'kvc-kar-input', onDrop: function (e) { kvcHandleKar({ target: { files: e.dataTransfer.files } }); } }
+            ];
+
+            zones.forEach(function (cfg) {
+                var zone = document.querySelector(cfg.zoneSelector);
+                var input = document.getElementById(cfg.inputId);
+                if (!zone || !input) return;
+
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(function (eventName) {
+                    zone.addEventListener(eventName, function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }, false);
+                });
+
+                ['dragenter', 'dragover'].forEach(function (eventName) {
+                    zone.addEventListener(eventName, function () {
+                        zone.classList.add('dragover');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(function (eventName) {
+                    zone.addEventListener(eventName, function () {
+                        zone.classList.remove('dragover');
+                    }, false);
+                });
+
+                zone.addEventListener('drop', function (e) {
+                    var files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        if (cfg.onDrop) {
+                            cfg.onDrop(e);
+                        } else if (cfg.zoneId === 'ref-audio-upload') {
+                            var fakeEvent = { target: { files: files } };
+                            handleAudioUpload(fakeEvent);
+                        }
+                    }
+                }, false);
+            });
+        }
+
+        // ════════ SSE STREAMING GENERATION ═══════════════════════════════════════
+        async function runGenStream() {
+            var btn = document.querySelector('.btn-p');
+            var dot = document.getElementById('sdot');
+            var st = document.getElementById('stext');
+            var progress = document.getElementById('gen-progress');
+            var progressFill = document.getElementById('gen-progress-fill');
+            var progressText = document.getElementById('gen-progress-text');
+
+            btn.textContent = 'Generating...';
+            btn.disabled = true;
+            dot.style.background = '#f59e0b';
+            dot.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.2)';
+            st.textContent = 'Starting generation...';
+            progress.classList.add('active');
+            progressFill.style.width = '10%';
+            progressText.textContent = 'Initializing...';
+
+            readSettings();
+            var textToSynth = document.getElementById('synth-text').value || document.getElementById('design-text').value || 'Hello from OmniVoice';
+
+            var fd = new FormData();
+            fd.append('text', textToSynth);
+            fd.append('settings_json', JSON.stringify(S));
+
+            var fileInput = document.getElementById('ref-audio-upload');
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                fd.append('ref_audio', fileInput.files[0]);
+            }
+
+            try {
+                // Use EventSource for streaming (but with POST, we need to use fetch with EventSource-like parsing)
+                var response = await fetch('/api/v2/generate/stream', { method: 'POST', body: fd });
+                var reader = response.body.getReader();
+                var decoder = new TextDecoder();
+                var buffer = '';
+
+                while (true) {
+                    var result = await reader.read();
+                    if (result.done) break;
+
+                    buffer += decoder.decode(result.value, { stream: true });
+                    var lines = buffer.split('\n\n');
+                    buffer = lines.pop(); // Keep incomplete chunk
+
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i].trim();
+                        if (!line) continue;
+
+                        // Parse SSE event
+                        var eventMatch = line.match(/^event: (\w+)/);
+                        var dataMatch = line.match(/^data: (.+)$/m);
+                        if (!dataMatch) continue;
+
+                        var eventType = eventMatch ? eventMatch[1] : 'message';
+                        var data = JSON.parse(dataMatch[1]);
+
+                        if (eventType === 'job_created') {
+                            progressFill.style.width = '20%';
+                            progressText.textContent = 'Job created: ' + data.job_id.slice(0, 8);
+                            st.textContent = 'Job queued...';
+                        } else if (eventType === 'progress') {
+                            progressFill.style.width = '50%';
+                            progressText.textContent = 'Generating audio...';
+                            st.textContent = 'Running TTS pipeline...';
+                        } else if (eventType === 'complete') {
+                            progressFill.style.width = '100%';
+                            progressText.textContent = 'Complete!';
+                            st.textContent = 'Done · ' + S.quant + ' · ' + S.device.toUpperCase();
+
+                            btn.textContent = 'Generate audio';
+                            btn.disabled = false;
+                            dot.style.background = '#10b981';
+                            dot.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)';
+                            progress.classList.remove('active');
+
+                            if (data.audio_url) {
+                                addHistory(textToSynth, data.audio_url, null);
+                            }
+                            return;
+                        } else if (eventType === 'error') {
+                            throw new Error(data.message || 'Generation failed');
+                        }
+                    }
+                }
+            } catch (e) {
+                btn.textContent = 'Generate audio';
+                btn.disabled = false;
+                dot.style.background = '#ef4444';
+                dot.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.2)';
+                st.textContent = 'Error: ' + (e.message || 'Failed');
+                progress.classList.remove('active');
+                alert('Generation error: ' + (e.message || 'Unknown'));
+            }
+        }
+
+        // Use streaming generation by default (can toggle with Shift+Click on Generate)
+        var _useStreaming = true;
+        document.addEventListener('keydown', function (e) {
+            if (e.shiftKey) _useStreaming = false;
+        });
+        document.addEventListener('keyup', function (e) {
+            if (!e.shiftKey) _useStreaming = true;
+        });
+
+        // Override the default runGen when not in karaoke panel
+        var _origRunGen = runGen;
+        window.runGen = function () {
+            var ap = document.querySelector('.panel.active');
+            if (ap && ap.id !== 'panel-karaoke' && _useStreaming) {
+                runGenStream();
+            } else {
+                _origRunGen();
+            }
+        };
+    </script>
+</body>
+
+</html>
