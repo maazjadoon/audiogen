@@ -1,0 +1,58 @@
+# ─── Core Web Framework ────────────────────────────────────────────────────────
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.12
+
+# ─── Rate limiting ─────────────────────────────────────────────────────────────
+slowapi>=0.1.9
+
+# ─── AI / Model ────────────────────────────────────────────────────────────────
+torch>=2.2.0
+torchaudio>=2.2.0
+transformers>=4.46.0
+accelerate>=1.0.0
+bitsandbytes>=0.43.0
+soundfile>=0.12.1
+librosa>=0.10.2
+
+# ─── Audio format conversion ───────────────────────────────────────────────────
+pydub>=0.25.1
+
+# ─── ONNX export / inference ───────────────────────────────────────────────────
+onnx>=1.16.0
+onnxruntime-gpu>=1.19.0   # swap to onnxruntime for CPU-only
+
+# ─── Database / Persistence ────────────────────────────────────────────────────
+sqlalchemy>=2.0.36
+aiosqlite>=0.20.0
+alembic>=1.13.3
+
+# ─── Caching / Queue ───────────────────────────────────────────────────────────
+redis>=5.2.0
+aiofiles>=24.1.0
+aiohttp>=3.9.0            # webhook delivery
+
+# ─── Metrics / Observability ───────────────────────────────────────────────────
+prometheus-client==0.21.0
+psutil>=6.1.0
+GPUtil>=1.4.0
+
+# ─── Validation / Settings ─────────────────────────────────────────────────────
+pydantic>=2.9.2
+pydantic-settings>=2.6.1
+python-dotenv>=1.0.1
+
+# ─── Testing ───────────────────────────────────────────────────────────────────
+pytest>=8.3.4
+pytest-asyncio>=0.24.0
+httpx>=0.27.2
+pytest-cov>=6.0.0
+
+# ─── Auth / Security ───────────────────────────────────────────────────────────
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# ─── Utilities ─────────────────────────────────────────────────────────────────
+numpy>=1.26.4
+scipy>=1.14.1
+rich>=13.9.4

@@ -4,8 +4,10 @@ OmniVoice Studio — FastAPI application entry-point.
 Architecture
 ────────────
   POST /api/v2/generate          — sync (wait for result)
-  POST /api/v2/generate/async    — submit job, returns job_id immediately
-  GET  /api/v2/jobs/{job_id}     — poll job status
+  POST /api/v2/generate/async    — submit job (JSON body), returns job_id
+  POST /api/v2/generate/async/form — async multipart (GUI); poll for phase/progress_pct
+  GET  /api/v2/jobs/{job_id}     — poll job status (+ phase, progress_pct while running)
+  POST /api/v2/jobs/{job_id}/cancel — request cooperative cancel
   GET  /api/v2/jobs/batch        — batch status check (multiple job IDs)
   GET  /api/v2/history           — paginated past jobs
   GET  /api/v2/health            — model + system health
@@ -100,15 +102,10 @@ async def lifespan(app: FastAPI):
         from model_manager import warmup_model
         await warmup_model()
     
-    # Setup signal handlers for graceful shutdown
-    def _signal_handler(signum, frame):
-        log.info(f"[SIGNAL] Received signal {signum}, initiating graceful shutdown...")
-        _shutdown_event.set()
-    
-    signal.signal(signal.SIGTERM, _signal_handler)
-    signal.signal(signal.SIGINT, _signal_handler)
-    
     yield
+    
+    # ── Shutdown Sequence ──
+    _shutdown_event.set()
     
     # Shutdown: wait for active requests to complete
     log.info("[STOP] Shutting down... waiting for active requests")
@@ -345,7 +342,7 @@ async def generate_sync(
                 return src  # fallback: use original if conversion fails
 
             wav_ref_path = str(OUTPUT_DIR / f"ref_{ts}.wav")
-            loop2 = asyncio.get_event_loop()
+            loop2 = asyncio.get_running_loop()
             ref_path = await loop2.run_in_executor(None, _to_wav, orig_ref_path, wav_ref_path)
             log.info(f"Reference audio ready → {ref_path}")
 
@@ -395,6 +392,72 @@ async def generate_async(
     return {"status": "pending", "job_id": job_id}
 
 
+@app.post("/api/v2/generate/async/form", tags=["Generation"])
+async def generate_async_form(
+    background_tasks: BackgroundTasks,
+    text: str = Form(...),
+    settings_json: Optional[str] = Form(None, alias="settings"),
+    ref_audio: Optional[UploadFile] = File(None),
+    _: bool = Depends(verify_api_key),
+):
+    """
+    Same as POST /api/v2/generate but asynchronous — multipart/form-data for the GUI.
+    Returns `{ "job_id", "status" }`; poll GET /api/v2/jobs/{job_id} for phase/progress_pct.
+    """
+    gen_text = text.strip()
+    try:
+        raw = json.loads(settings_json or "{}")
+    except json.JSONDecodeError as exc:
+        raise HTTPException(400, f"Invalid settings JSON: {exc}")
+    from schemas import GenerationSettings
+    gen_settings = GenerationSettings(**raw)
+
+    ref_path: Optional[str] = None
+    if ref_audio and ref_audio.filename:
+        ts = int(time.time())
+        safe_name = f"ref_{ts}_{ref_audio.filename}"
+        orig_ref_path = str(OUTPUT_DIR / safe_name)
+        content = await ref_audio.read()
+        async with aiofiles.open(orig_ref_path, "wb") as f:
+            await f.write(content)
+        log.info(f"[async/form] Saved reference audio → {orig_ref_path}")
+
+        def _to_wav(src: str, dst: str) -> str:
+            try:
+                import torchaudio
+                wav, sr = torchaudio.load(src)
+                torchaudio.save(dst, wav, sr)
+                return dst
+            except Exception:
+                pass
+            try:
+                from pydub import AudioSegment
+                AudioSegment.from_file(src).export(dst, format="wav")
+                return dst
+            except Exception:
+                pass
+            return src
+
+        wav_ref_path = str(OUTPUT_DIR / f"ref_{ts}.wav")
+        loop2 = asyncio.get_running_loop()
+        ref_path = await loop2.run_in_executor(None, _to_wav, orig_ref_path, wav_ref_path)
+        log.info(f"[async/form] Reference audio ready → {ref_path}")
+
+    job_id = await create_job(
+        text=gen_text,
+        gen_settings=gen_settings,
+        ref_audio_path=ref_path,
+    )
+    background_tasks.add_task(
+        generate_audio,
+        job_id=job_id,
+        text=gen_text,
+        gen_settings=gen_settings,
+        ref_audio_path=ref_path,
+    )
+    return {"status": "pending", "job_id": job_id}
+
+
 # ── BATCH GENERATION ───────────────────────────────────────────────────────────
 @app.post("/api/v2/generate/batch", tags=["Generation"])
 async def generate_batch(
@@ -425,18 +488,55 @@ async def get_job(
     db: AsyncSession = Depends(get_db),
     _: bool = Depends(verify_api_key),
 ):
+    from generation_service import get_job_progress
+
     job = await db.get(GenerationJob, job_id)
     if not job:
         raise HTTPException(404, f"Job {job_id} not found")
+
+    phase: Optional[str] = None
+    progress_pct: Optional[int] = None
+    st = str(job.status)
+    if st == "done":
+        phase, progress_pct = "Complete", 100
+    elif st == "cancelled":
+        phase, progress_pct = "Cancelled", None
+    elif st == "error":
+        phase = "Failed"
+    else:
+        prog = get_job_progress(job_id)
+        if prog:
+            phase, progress_pct = prog[0], prog[1]
+
     return JobStatusResponse(
         job_id=str(job.id),
-        status=str(job.status),
+        status=st,
         audio_url=job.audio_url,
         generation_time=job.generation_time,
         error_message=job.error_message,
         created_at=job.created_at.isoformat() if job.created_at else None,
         finished_at=job.finished_at.isoformat() if job.finished_at else None,
+        phase=phase,
+        progress_pct=progress_pct,
     )
+
+
+@app.post("/api/v2/jobs/{job_id}/cancel", tags=["Jobs"])
+async def cancel_job(
+    job_id: str,
+    db: AsyncSession = Depends(get_db),
+    _: bool = Depends(verify_api_key),
+):
+    """Request cooperative cancellation of a pending or running generation job."""
+    from generation_service import request_cancel
+
+    job = await db.get(GenerationJob, job_id)
+    if not job:
+        raise HTTPException(404, f"Job {job_id} not found")
+    if job.status in ("done", "error", "cancelled"):
+        return {"ok": False, "message": f"Job already finished ({job.status})"}
+    request_cancel(job_id)
+    return {"ok": True, "message": "Cancellation requested — synthesis may finish current GPU step first"}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -528,7 +628,7 @@ async def generate_stream(
             return src
 
         wav_ref_path = str(OUTPUT_DIR / f"ref_{ts}.wav")
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         ref_path = await loop.run_in_executor(None, _to_wav, orig_ref_path, wav_ref_path)
 
     # Create job
@@ -550,14 +650,28 @@ async def generate_stream(
         yield f"event: progress\ndata: {_json.dumps({'job_id': job_id, 'status': 'running', 'progress': 10})}\n\n"
         await asyncio.sleep(0.1)
 
-        # Run generation
-        try:
-            result = await generate_audio(
+        # Run generation with keep-alive heartbeat pings
+        gen_task = asyncio.create_task(
+            generate_audio(
                 job_id=job_id,
                 text=text,
                 gen_settings=gen_settings,
                 ref_audio_path=ref_path,
             )
+        )
+        try:
+            while not gen_task.done():
+                # Send SSE comment as keep-alive every 15s
+                yield ": heartbeat\n\n"
+                try:
+                    result = await asyncio.wait_for(
+                        asyncio.shield(gen_task), timeout=15.0
+                    )
+                    break
+                except asyncio.TimeoutError:
+                    continue
+
+            result = gen_task.result()
 
             if result["status"] == "success":
                 yield f"event: complete\ndata: {_json.dumps({'job_id': job_id, 'status': 'done', 'audio_url': result.get('audio_url')})}\n\n"
@@ -742,7 +856,7 @@ async def karaoke_voice_conversion(
 
     ref_path = str(OUTPUT_DIR / f"kvc_ref_{ts}.wav")
     kar_path = str(OUTPUT_DIR / f"kvc_kar_{ts}.wav")
-    loop2 = asyncio.get_event_loop()
+    loop2 = asyncio.get_running_loop()
     ref_path = await loop2.run_in_executor(None, _to_wav, orig_ref_path, ref_path)
     kar_path = await loop2.run_in_executor(None, _to_wav, orig_kar_path, kar_path)
 
@@ -779,6 +893,8 @@ async def karaoke_async(
     ref_audio: UploadFile = File(...),
     karaoke_audio: UploadFile = File(...),
     settings_json: Optional[str] = Form("{}"),
+    audio_type: str = Form("full_song"),
+    manual_lyrics: Optional[str] = Form(None),
     pitch_shift_override: Optional[int] = Form(None),
     match_pitch_auto: bool = Form(True),
     mix_with_instrumental: bool = Form(False),
@@ -788,22 +904,48 @@ async def karaoke_async(
     background_tasks: BackgroundTasks = BackgroundTasks(),
     _: bool = Depends(verify_api_key),
 ):
-    """Async karaoke VC — submit job, returns job_id immediately."""
+    """Async karaoke VC — submit job, returns job_id immediately (parity with POST /karaoke)."""
     try:
         raw = json.loads(settings_json or "{}")
     except json.JSONDecodeError:
         raw = {}
     from schemas import GenerationSettings
     gen_settings = GenerationSettings(**raw)
+    gen_settings.mode = "karaoke"  # type: ignore[assignment]
 
     ts = int(time.time())
-    ref_path = str(OUTPUT_DIR / f"kvc_ref_{ts}_{ref_audio.filename}")
-    async with aiofiles.open(ref_path, "wb") as f:
-        await f.write(await ref_audio.read())
 
-    kar_path = str(OUTPUT_DIR / f"kvc_kar_{ts}_{karaoke_audio.filename}")
-    async with aiofiles.open(kar_path, "wb") as f:
-        await f.write(await karaoke_audio.read())
+    orig_ref_path = str(OUTPUT_DIR / f"kvc_ref_{ts}_{ref_audio.filename}")
+    ref_content = await ref_audio.read()
+    async with aiofiles.open(orig_ref_path, "wb") as f:
+        await f.write(ref_content)
+
+    orig_kar_path = str(OUTPUT_DIR / f"kvc_kar_{ts}_{karaoke_audio.filename}")
+    kar_content = await karaoke_audio.read()
+    async with aiofiles.open(orig_kar_path, "wb") as f:
+        await f.write(kar_content)
+
+    def _to_wav(src, dst):
+        try:
+            import torchaudio
+            wav, sr = torchaudio.load(src)
+            torchaudio.save(dst, wav, sr)
+            return dst
+        except Exception:
+            pass
+        try:
+            from pydub import AudioSegment
+            AudioSegment.from_file(src).export(dst, format="wav")
+            return dst
+        except Exception:
+            pass
+        return src
+
+    ref_path = str(OUTPUT_DIR / f"kvc_ref_{ts}.wav")
+    kar_path = str(OUTPUT_DIR / f"kvc_kar_{ts}.wav")
+    loop2 = asyncio.get_running_loop()
+    ref_path = await loop2.run_in_executor(None, _to_wav, orig_ref_path, ref_path)
+    kar_path = await loop2.run_in_executor(None, _to_wav, orig_kar_path, kar_path)
 
     job_id = await create_kvc_job(
         ref_audio_path=ref_path,
@@ -816,6 +958,8 @@ async def karaoke_async(
         ref_audio_path=ref_path,
         karaoke_audio_path=kar_path,
         gen_settings=gen_settings,
+        audio_type=audio_type,
+        manual_lyrics=manual_lyrics,
         pitch_shift_override=pitch_shift_override,
         match_pitch_auto=match_pitch_auto,
         mix_with_instrumental=mix_with_instrumental,
@@ -887,7 +1031,7 @@ async def blend_voices(
             return src
 
         wav_ref_path = str(OUTPUT_DIR / f"blend_a_{ts}.wav")
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         ref_path_a = await loop.run_in_executor(None, _to_wav, orig_ref_path, wav_ref_path)
         log.info(f"Blend: Primary voice saved → {ref_path_a}")
 
@@ -919,7 +1063,7 @@ async def blend_voices(
             return src
 
         wav_ref_path = str(OUTPUT_DIR / f"blend_b_{ts}.wav")
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         ref_path_b = await loop.run_in_executor(None, _to_wav_b, orig_ref_path, wav_ref_path)
         gen_settings.ref_audio_secondary = ref_path_b
         log.info(f"Blend: Secondary voice saved → {ref_path_b}")

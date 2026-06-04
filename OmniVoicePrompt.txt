@@ -1,0 +1,29 @@
+Viewed schemas.py:1-91
+Viewed config.py:1-68
+Viewed model_manager.py:1-129
+
+Now I have everything I need. Let me write the report:
+
+Edited OmniVoice_Studio_Report.md
+
+The report is ready. Here's what it covers across **15 sections**:
+
+| Section | Contents |
+|---|---|
+| **1. Overview** | What the software does, 4 core capabilities |
+| **2. File Structure** | Every file with its purpose |
+| **3. Tech Stack** | Full list (FastAPI, OmniVoice, Whisper, librosa, etc.) |
+| **4. Configuration** | All `.env` variables explained |
+| **5. API Routes** | Every endpoint with method, path, request format |
+| **6. TTS Pipeline** | 13-step flow for voice cloning/synthesis |
+| **7. KVC Pipeline** | 8-step karaoke conversion flow with audio type table |
+| **8. Model Management** | Singleton, lazy loading, quantization options |
+| **9. Database Schema** | All columns in `generation_jobs` table |
+| **10. Frontend** | Panel list, key JS functions, global state object |
+| **11. Audio Loading** | The multi-backend cascade (no ffmpeg needed) |
+| **12. Known Issues** | Bug table with root causes and fixes applied |
+| **13. Running** | How to start/stop the server |
+| **14. Settings Reference** | All generation params with ranges |
+| **15. Output Files** | File naming patterns |
+
+You can copy-paste the entire report to any AI and it will have full context to help you.

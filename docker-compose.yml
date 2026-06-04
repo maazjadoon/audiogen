@@ -1,0 +1,126 @@
+version: "3.9"
+
+# ════════════════════════════════════════════════════════════════════════════════
+# OmniVoice Studio — Docker Compose (Development + Production)
+#
+# Usage:
+#   docker compose up                      # dev mode (no GPU)
+#   docker compose --profile gpu up        # NVIDIA GPU mode
+#   docker compose --profile monitoring up # + Prometheus + Grafana
+# ════════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ── Main Application ──────────────────────────────────────────────────────────
+  omnivoice:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: omnivoice-studio:latest
+    container_name: omnivoice-studio
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - OUTPUT_DIR=/app/omnivoice_outputs
+      - DB_URL=sqlite+aiosqlite:////app/data/omnivoice.db
+      - HF_HOME=/app/hf_cache
+    volumes:
+      - omnivoice_outputs:/app/omnivoice_outputs
+      - omnivoice_data:/app/data
+      - hf_cache:/app/hf_cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 12G
+    profiles: ["default", "gpu", "monitoring"]
+
+  # ── GPU override (NVIDIA) ─────────────────────────────────────────────────────
+  omnivoice-gpu:
+    extends:
+      service: omnivoice
+    container_name: omnivoice-studio-gpu
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    profiles: ["gpu"]
+
+  # ── Redis (optional caching) ───────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: omnivoice-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
+    profiles: ["default", "gpu", "monitoring"]
+
+  # ── Prometheus ────────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: omnivoice-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=15d"
+    profiles: ["monitoring"]
+
+  # ── Grafana ───────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: omnivoice-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    profiles: ["monitoring"]
+
+  # ── Nginx reverse proxy (optional) ────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: omnivoice-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - omnivoice
+    profiles: ["prod"]
+
+
+volumes:
+  omnivoice_outputs:
+  omnivoice_data:
+  hf_cache:
+  redis_data:
+  prometheus_data:
+  grafana_data:

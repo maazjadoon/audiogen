@@ -969,29 +969,29 @@
                 <!-- KARAOKE VC -->
                 <div class="panel" id="panel-karaoke">
                     <div class="sec-title">Karaoke Voice Conversion</div>
-                    <div class="sec-sub">Upload your voice + any audio track → get the track re-sung in your voice</div>
+                    <div class="sec-sub">Upload your voice + any audio track → get the performance re-rendered in your voice,
+                        timed to the original.</div>
 
-                    <!-- Pipeline badge -->
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;align-items:center">
-                        <div
-                            style="background:#F0FDF4;border:1px solid #BBF7D0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#15803D">
-                            1 · Vocal Isolation (HPSS)</div>
-                        <div style="color:#cbd5e1;font-size:12px">→</div>
-                        <div
-                            style="background:#EFF6FF;border:1px solid #BFDBFE;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#1D4ED8">
-                            2 · Whisper Transcription</div>
-                        <div style="color:#cbd5e1;font-size:12px">→</div>
-                        <div
-                            style="background:#FAF5FF;border:1px solid #E9D5FF;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#7C3AED">
-                            3 · Pitch Analysis (F0)</div>
-                        <div style="color:#cbd5e1;font-size:12px">→</div>
-                        <div
-                            style="background:#FFF7ED;border:1px solid #FED7AA;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#C2410C">
-                            4 · OmniVoice Clone</div>
-                        <div style="color:#cbd5e1;font-size:12px">→</div>
-                        <div
-                            style="background:#F0FDF4;border:1px solid #BBF7D0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#15803D">
-                            5 · Time Stretch + Mix</div>
+                    <div class="card" style="margin-bottom:16px">
+                        <div class="card-label">Pipeline</div>
+                        <p id="kvc-pipeline-hint"
+                            style="font-size:12px;color:var(--text-muted);line-height:1.55;margin-bottom:10px">Choose an
+                            audio type below — the steps adjust automatically.</p>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center" id="kvc-pipeline-row">
+                            <span
+                                style="background:#EFF6FF;border:1px solid #BFDBFE;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#1D4ED8">Transcribe</span>
+                            <span style="color:#cbd5e1;font-size:12px">→</span>
+                            <span
+                                style="background:#FAF5FF;border:1px solid #E9D5FF;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#7C3AED">Pitch
+                                (F0)</span>
+                            <span style="color:#cbd5e1;font-size:12px">→</span>
+                            <span
+                                style="background:#FFF7ED;border:1px solid #FED7AA;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#C2410C">OmniVoice</span>
+                            <span style="color:#cbd5e1;font-size:12px">→</span>
+                            <span
+                                style="background:#F0FDF4;border:1px solid #BBF7D0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#15803D">Time
+                                / mix</span>
+                        </div>
                     </div>
 
                     <div class="card">
@@ -1046,8 +1046,25 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="field" style="margin-top:16px">
+                            <label>Reference voice transcript <span class="badge bg">Optional — helps align
+                                    timbre</span></label>
+                            <input type="text" id="kvc-ref-text" placeholder="What the reference clip says (if known)"
+                                style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box;background:var(--bg-card);color:var(--text-main)">
+                        </div>
                     </div>
 
+                    <div class="card">
+                        <div class="card-label">Vocal delivery (OmniVoice)</div>
+                        <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px;line-height:1.45">Applies the
+                            same style / emotion hints as the main TTS path (storytelling works well for singing).</p>
+                        <div class="chip-group" id="kvc-style-chips">
+                            <div class="chip" onclick="kvcOneStyleChip(this)">Neutral</div>
+                            <div class="chip active" onclick="kvcOneStyleChip(this)">Storytelling</div>
+                            <div class="chip" onclick="kvcOneStyleChip(this)">Calm</div>
+                            <div class="chip" onclick="kvcOneStyleChip(this)">Enthusiastic</div>
+                        </div>
+                    </div>
 
                     <!-- AUDIO TYPE CARD -->
                     <div class="card">
@@ -1192,8 +1209,10 @@
                                 style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">
                                 <div
                                     style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">
-                                    Whisper transcript</div>
+                                    Transcript / lyrics</div>
                                 <div style="font-size:13px;color:#334155;font-style:italic" id="kvc-transcript">—</div>
+                                <div id="kvc-transcript-meta"
+                                    style="font-size:10px;color:var(--text-tertiary);margin-top:6px">—</div>
                             </div>
                         </div>
                     </div>
@@ -1438,9 +1457,11 @@
                     <div class="sdot" id="sdot"></div>
                     <span id="stext">Ready · 4-bit NF4 · CUDA:0 · ~4.2 GB est.</span>
                 </div>
-                <div style="display:flex; gap:12px;">
+                <div style="display:flex; gap:12px; align-items:center;">
                     <button class="btn-s"
                         onclick="nav('codegen',document.querySelector('.nav-item:nth-child(8)'))">Code</button>
+                    <button type="button" class="btn-s" id="gen-cancel-btn" onclick="cancelGeneration()"
+                        style="display:none;color:#b91c1c;border-color:#fecaca;background:#fef2f2">Cancel</button>
                     <button class="btn-p" onclick="runGen()">Generate audio</button>
                 </div>
             </div>
@@ -1828,7 +1849,166 @@
         }
 
         var genCount = 0;
-        async function runGen() {
+        var _genPollTimer = null;
+        var _activeGenJobId = null;
+        var _useLegacySyncGen = false;
+
+        function stopGenerationUi() {
+            if (_genPollTimer) {
+                clearInterval(_genPollTimer);
+                _genPollTimer = null;
+            }
+            _activeGenJobId = null;
+            var btn = document.querySelector('.btn-p');
+            var cancelBtn = document.getElementById('gen-cancel-btn');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Generate audio';
+            }
+            if (cancelBtn) cancelBtn.style.display = 'none';
+            var progress = document.getElementById('gen-progress');
+            if (progress) progress.classList.remove('active');
+        }
+
+        async function cancelGeneration() {
+            if (!_activeGenJobId) return;
+            try {
+                await fetch('/api/v2/jobs/' + _activeGenJobId + '/cancel', { method: 'POST' });
+                var progressText = document.getElementById('gen-progress-text');
+                var st = document.getElementById('stext');
+                if (progressText) progressText.textContent = 'Stopping…';
+                if (st) st.textContent = 'Cancellation requested — finishing current GPU step if any…';
+            } catch (e) {
+                alert(e.message || 'Cancel failed');
+            }
+        }
+
+        async function runGenAsyncPoll() {
+            var btn = document.querySelector('.btn-p');
+            var cancelBtn = document.getElementById('gen-cancel-btn');
+            var dot = document.getElementById('sdot');
+            var st = document.getElementById('stext');
+            var progress = document.getElementById('gen-progress');
+            var progressFill = document.getElementById('gen-progress-fill');
+            var progressText = document.getElementById('gen-progress-text');
+
+            stopGenerationUi();
+
+            readSettings();
+            var textToSynth = document.getElementById('synth-text').value || document.getElementById('design-text').value || 'Hello from OmniVoice';
+
+            var fd = new FormData();
+            fd.append('text', textToSynth);
+            fd.append('settings', JSON.stringify(S));
+            var fileInput = document.getElementById('ref-audio-upload');
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                fd.append('ref_audio', fileInput.files[0]);
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Generating…';
+            if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+            dot.style.background = '#f59e0b';
+            dot.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.2)';
+            st.textContent = 'Submitting job…';
+            progress.classList.add('active');
+            progressFill.style.width = '5%';
+            progressText.textContent = 'Submitting to server…';
+
+            function parseHttpError(res, body) {
+                var d = body.detail;
+                if (Array.isArray(d)) {
+                    return d.map(function (x) { return x.msg || JSON.stringify(x); }).join('; ');
+                }
+                return body.message || body.detail || ('HTTP ' + res.status);
+            }
+
+            try {
+                var startRes = await fetch('/api/v2/generate/async/form', { method: 'POST', body: fd });
+                var startData = await startRes.json().catch(function () { return {}; });
+                if (!startRes.ok) throw new Error(parseHttpError(startRes, startData));
+
+                var jobId = startData.job_id;
+                if (!jobId) throw new Error('No job_id returned');
+
+                _activeGenJobId = jobId;
+
+                async function pollOnce() {
+                    var jr = await fetch('/api/v2/jobs/' + jobId);
+                    var j = await jr.json().catch(function () { return {}; });
+                    if (!jr.ok) return false;
+
+                    if (j.progress_pct != null && !isNaN(j.progress_pct)) {
+                        progressFill.style.width = j.progress_pct + '%';
+                    }
+                    var line = '';
+                    if (j.phase) line = j.phase;
+                    if (j.progress_pct != null && !isNaN(j.progress_pct)) {
+                        line = line ? line + ' · ' + j.progress_pct + '%' : j.progress_pct + '%';
+                    }
+                    if (progressText && line) progressText.textContent = line;
+                    if (st && j.phase) st.textContent = j.phase;
+
+                    if (j.status === 'done') {
+                        if (_genPollTimer) {
+                            clearInterval(_genPollTimer);
+                            _genPollTimer = null;
+                        }
+                        _activeGenJobId = null;
+                        progressFill.style.width = '100%';
+                        if (progressText) progressText.textContent = 'Complete';
+                        if (cancelBtn) cancelBtn.style.display = 'none';
+                        progress.classList.remove('active');
+                        btn.disabled = false;
+                        btn.textContent = 'Generate audio';
+                        dot.style.background = '#10b981';
+                        dot.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)';
+                        st.textContent = 'Done · ' + S.quant + ' · ' + S.device.toUpperCase() + ' · ' + (j.generation_time || 0) + 's';
+                        genCount++;
+                        if (j.audio_url) addHistory(textToSynth, j.audio_url, null);
+                        return true;
+                    }
+                    if (j.status === 'error' || j.status === 'cancelled') {
+                        if (_genPollTimer) {
+                            clearInterval(_genPollTimer);
+                            _genPollTimer = null;
+                        }
+                        _activeGenJobId = null;
+                        if (cancelBtn) cancelBtn.style.display = 'none';
+                        progress.classList.remove('active');
+                        btn.disabled = false;
+                        btn.textContent = 'Generate audio';
+                        if (j.status === 'cancelled') {
+                            dot.style.background = '#f59e0b';
+                            dot.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.2)';
+                            st.textContent = 'Cancelled';
+                        } else {
+                            dot.style.background = '#ef4444';
+                            dot.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.2)';
+                            st.textContent = 'Error: ' + (j.error_message || 'Generation failed');
+                            alert(j.error_message || 'Generation failed');
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+
+                var finished = await pollOnce();
+                if (!finished) {
+                    _genPollTimer = setInterval(function () {
+                        pollOnce();
+                    }, 400);
+                }
+            } catch (e) {
+                stopGenerationUi();
+                dot.style.background = '#ef4444';
+                dot.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.2)';
+                st.textContent = 'Error: ' + (e.message || 'Failed to connect to backend');
+                alert(e.message || 'Request failed');
+            }
+        }
+
+        async function runGenSync() {
             var btn = document.querySelector('.btn-p');
             var dot = document.getElementById('sdot');
             var st = document.getElementById('stext');
@@ -1836,7 +2016,7 @@
             btn.disabled = true;
             dot.style.background = '#f59e0b';
             dot.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.2)';
-            st.textContent = 'Processing request via backend...';
+            st.textContent = 'Processing request via backend (sync)…';
 
             readSettings();
             let textToSynth = document.getElementById('synth-text').value || document.getElementById('design-text').value || 'Hello from OmniVoice';
@@ -2041,6 +2221,22 @@
             karaoke_track: 'Instrumental only — enter lyrics below',
             speech: 'Spoken audio, dialogue, podcast'
         };
+        var _kvcPipelineDesc = {
+            full_song: 'Whisper reads the mixed track, pitch is aligned to your reference voice, OmniVoice produces your take, then output is time-stretched to the original length. Use Mix in + HPSS to blend over a separated bed.',
+            vocals_only: 'Same chain without HPSS separation — best for dry vocals or isolated stems.',
+            karaoke_track: 'No automatic lyrics: paste them below. Audio B is the backing track; auto pitch match is turned off (use manual semitones if needed).',
+            speech: 'Tuned for spoken content — still aligns timing and pitch like sung audio.'
+        };
+        function kvcOneStyleChip(c) {
+            var g = document.getElementById('kvc-style-chips');
+            if (!g) return;
+            g.querySelectorAll('.chip').forEach(function (x) { x.classList.remove('active'); });
+            c.classList.add('active');
+        }
+        function kvcRefreshPipeline() {
+            var h = document.getElementById('kvc-pipeline-hint');
+            if (h && _kvcPipelineDesc[_kvcAudioType]) h.textContent = _kvcPipelineDesc[_kvcAudioType];
+        }
         function kvcSetType(t) {
             _kvcAudioType = t;
             // Update card styling
@@ -2068,6 +2264,7 @@
             if (t === 'karaoke_track') kvcToggleMix(true);
             // Disable auto pitch for karaoke_track (no vocals to compare)
             if (t === 'karaoke_track') kvcToggleAutoPitch(false);
+            kvcRefreshPipeline();
         }
         // Mark full_song as default active on load
         document.addEventListener('DOMContentLoaded', function () {
@@ -2076,31 +2273,84 @@
         async function runKVC() {
             if (!_kvcRefAudio || !_kvcKarAudio) { alert('Upload both Audio A (voice reference) and Audio B (karaoke/performance).'); return; }
             var btn = document.querySelector('.btn-p'), dot = document.getElementById('sdot'), stEl = document.getElementById('stext');
-            btn.textContent = 'Converting...'; btn.disabled = true; dot.style.background = '#f59e0b'; stEl.textContent = 'KVC [' + _kvcTypeLabels[_kvcAudioType] + ']: transcribing and synthesising...';
+            var progress = document.getElementById('gen-progress');
+            var progressFill = document.getElementById('gen-progress-fill');
+            var progressText = document.getElementById('gen-progress-text');
+            var progressTimer = null;
+            function clearKvcProgress() {
+                if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+                if (progress) progress.classList.remove('active');
+            }
+            btn.textContent = 'Converting...'; btn.disabled = true; dot.style.background = '#f59e0b';
+            stEl.textContent = 'KVC [' + _kvcTypeLabels[_kvcAudioType] + ']: transcribing & synthesizing…';
+            if (progress && progressFill && progressText) {
+                progress.classList.add('active');
+                progressFill.style.width = '10%';
+                progressText.textContent = 'Uploading & loading audio…';
+                var pw = 10;
+                progressTimer = setInterval(function () {
+                    if (pw < 30) pw += 3.5;
+                    else if (pw < 38) pw += 2;
+                    else if (pw < 78) pw += 0.65;
+                    else pw += 2.2;
+                    pw = Math.min(pw, 91);
+                    progressFill.style.width = Math.round(pw) + '%';
+                    if (pw < 28) progressText.textContent = 'Upload / transcribe (Whisper)…';
+                    else if (pw < 40) progressText.textContent = 'Pitch alignment (reference vs track)…';
+                    else if (pw < 80) progressText.textContent = 'Voice cloning (OmniVoice — usually the slowest step)…';
+                    else progressText.textContent = 'Match length, optional mix, encode WAV…';
+                }, 850);
+            }
             readSettings();
+            var kvcStyleChip = document.querySelector('#kvc-style-chips .chip.active');
+            if (kvcStyleChip) S.style = kvcStyleChip.textContent.trim().toLowerCase().replace(/\s+/g, '_');
+            S.lang = document.getElementById('kvc-lang').value;
+            S.mode = 'karaoke';
+            var rtx = document.getElementById('kvc-ref-text');
+            S.ref_text = rtx && rtx.value ? rtx.value.trim() : '';
+
             var fd = new FormData();
             fd.append('ref_audio', _kvcRefAudio); fd.append('karaoke_audio', _kvcKarAudio);
             fd.append('audio_type', _kvcAudioType);
             var manualLyrics = document.getElementById('kvc-manual-lyrics').value.trim();
-            if (_kvcAudioType === 'karaoke_track' && manualLyrics) { fd.append('manual_lyrics', manualLyrics); }
-            if (_kvcAudioType === 'karaoke_track' && !manualLyrics) { alert('Please enter the lyrics/text for the karaoke track.'); btn.textContent = 'Generate audio'; btn.disabled = false; return; }
+            if (manualLyrics) fd.append('manual_lyrics', manualLyrics);
+            if (_kvcAudioType === 'karaoke_track' && !manualLyrics) {
+                clearKvcProgress(); btn.textContent = 'Generate audio'; btn.disabled = false;
+                alert('Please enter the lyrics/text for the karaoke track.'); return;
+            }
             fd.append('match_pitch_auto', _kvcAutoPitch ? 'true' : 'false'); fd.append('mix_with_instrumental', _kvcMix ? 'true' : 'false');
             fd.append('language', document.getElementById('kvc-lang').value);
             if (!_kvcAutoPitch) fd.append('pitch_shift_override', document.getElementById('kvc-pitch').value);
             if (_kvcMix) { fd.append('vocal_gain', (document.getElementById('kvc-vgain').value / 100).toFixed(2)); fd.append('inst_gain', (document.getElementById('kvc-igain').value / 100).toFixed(2)); }
-            fd.append('settings_json', JSON.stringify({ steps: S.steps, cfg: S.cfg, temp: S.temp, sampler: S.sampler, sim: S.sim, quant: S.quant }));
+            fd.append('settings_json', JSON.stringify(S));
             try {
                 var res = await fetch('/api/v2/karaoke', { method: 'POST', body: fd });
                 var data = await res.json();
+                clearKvcProgress();
                 if (data.status !== 'success') throw new Error(data.message || 'Unknown error');
                 _kvcResultUrl = data.audio_url;
                 document.getElementById('kvc-result').style.display = 'block';
                 document.getElementById('kvc-transcript').textContent = data.transcript || '(no transcript)';
-                var meta = data.generation_time + 's'; if (data.pitch_delta_semitones) meta += ' | pitch ' + (data.pitch_delta_semitones > 0 ? '+' : '') + parseFloat(data.pitch_delta_semitones).toFixed(1) + ' st';
+                var srcLabels = { manual: 'Manual lyrics / transcript', whisper: 'Whisper', cache: 'Cached transcript', filename: 'Filename fallback' };
+                var tmeta = document.getElementById('kvc-transcript-meta');
+                if (tmeta) {
+                    var bits = [];
+                    if (data.transcript_source) bits.push('Source: ' + (srcLabels[data.transcript_source] || data.transcript_source));
+                    if (data.karaoke_duration_s != null) bits.push('Target ' + parseFloat(data.karaoke_duration_s).toFixed(1) + 's');
+                    if (data.time_stretch_factor) bits.push('Stretch ×' + data.time_stretch_factor);
+                    tmeta.textContent = bits.length ? bits.join(' · ') : '—';
+                }
+                var meta = (data.generation_time || 0) + 's';
+                if (data.pitch_delta_semitones !== undefined && data.pitch_delta_semitones !== null) {
+                    meta += ' | pitch align ' + (data.pitch_delta_semitones > 0 ? '+' : '') + parseFloat(data.pitch_delta_semitones).toFixed(1) + ' st';
+                }
                 document.getElementById('kvc-result-meta').textContent = meta;
                 var wf = document.getElementById('kvc-waveform'); wf.innerHTML = Array.from({ length: 48 }, function () { var h = 8 + Math.random() * 32; return '<div class="wbar" style="height:' + h + 'px;margin-top:' + (48 - h) / 2 + 'px"></div>'; }).join('');
                 btn.textContent = 'Generate audio'; btn.disabled = false; dot.style.background = '#10b981'; stEl.textContent = 'KVC done in ' + data.generation_time + 's';
-            } catch (e) { btn.textContent = 'Generate audio'; btn.disabled = false; dot.style.background = '#ef4444'; stEl.textContent = 'KVC error: ' + (e.message || 'Failed'); alert('Karaoke VC error: ' + (e.message || 'Unknown')); }
+            } catch (e) {
+                clearKvcProgress();
+                btn.textContent = 'Generate audio'; btn.disabled = false; dot.style.background = '#ef4444'; stEl.textContent = 'KVC error: ' + (e.message || 'Failed'); alert('Karaoke VC error: ' + (e.message || 'Unknown'));
+            }
         }
         // Route Generate button to KVC when karaoke panel is active
         document.addEventListener('click', function (e) { if (e.target.classList.contains('btn-p')) { var ap = document.querySelector('.panel.active'); if (ap && ap.id === 'panel-karaoke') { e.stopImmediatePropagation(); runKVC(); } } }, true);
@@ -2267,24 +2517,19 @@
             }
         }
 
-        // Use streaming generation by default (can toggle with Shift+Click on Generate)
-        var _useStreaming = true;
+        // Hold Shift while clicking Generate to use one-shot sync HTTP (no cancel / coarse progress)
         document.addEventListener('keydown', function (e) {
-            if (e.shiftKey) _useStreaming = false;
+            if (e.shiftKey) _useLegacySyncGen = true;
         });
         document.addEventListener('keyup', function (e) {
-            if (!e.shiftKey) _useStreaming = true;
+            if (!e.shiftKey) _useLegacySyncGen = false;
         });
 
-        // Override the default runGen when not in karaoke panel
-        var _origRunGen = runGen;
         window.runGen = function () {
             var ap = document.querySelector('.panel.active');
-            if (ap && ap.id !== 'panel-karaoke' && _useStreaming) {
-                runGenStream();
-            } else {
-                _origRunGen();
-            }
+            if (ap && ap.id === 'panel-karaoke') return;
+            if (_useLegacySyncGen) runGenSync();
+            else runGenAsyncPoll();
         };
     </script>
 </body>

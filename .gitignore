@@ -1,0 +1,79 @@
+﻿# Virtual environments
+venv/
+env/
+.venv/
+.env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model weights & checkpoints (large binary files)
+*.pt
+*.pth
+*.bin
+*.h5
+*.hdf5
+*.pkl
+*.ckpt
+*.safetensors
+*.onnx
+*.engine
+*.trt
+
+# Datasets & large files
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+data/
+datasets/
+dataset/
+
+# Logs & outputs
+*.log
+logs/
+runs/
+output/
+outputs/
+results/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+*.env
+
+# HuggingFace model cache
+hf_cache/
+.cache/
+
+
+# Generated audio outputs
+omnivoice_outputs/
+*.wav
+*.mp3
+
+# SQLite DB files
+*.db
+*.db-shm
+*.db-wal
+
+# Conversation/chat logs
+*conversation*.md
+
